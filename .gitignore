@@ -1,0 +1,52 @@
+# -------------------------------------------------------------------------
+# Dart & Flutter - Standard Ignore
+# -------------------------------------------------------------------------
+# Hasil build proyek (Inilah yang menyebabkan error file besar)
+build/
+
+# Folder dependencies (mirip node_modules)
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+
+# File metadata Flutter
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+
+# -------------------------------------------------------------------------
+# IDE & System Files
+# -------------------------------------------------------------------------
+# Android Studio / IntelliJ
+.idea/
+*.iml
+*.iws
+
+# Visual Studio Code
+.vscode/
+
+# macOS (Khusus untuk MacBook Air M1 kamu)
+.DS_Store
+
+# -------------------------------------------------------------------------
+# Mobile Specific (Android & iOS)
+# -------------------------------------------------------------------------
+# Android
+**/android/**/generated/
+**/android/captures/
+*.apk
+*.aab
+
+# iOS
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Pods/
+ServiceDevice.plist
+DerivedData/
+
+# -------------------------------------------------------------------------
+# Secrets & Environment (Penting untuk keamanan)
+# -------------------------------------------------------------------------
+.env
+*.secret
