@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
@@ -23,112 +24,93 @@ class TopLiquidSnackBarBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = _paletteFor(type);
 
-    return LiquidGlassLayer(
-      settings: const LiquidGlassSettings(
-        thickness: 14,
-        blur: 6,
-        glassColor: Color(0x12FFFFFF),
-        saturation: 1.1,
-        lightIntensity: 2.1,
-        ambientStrength: 0.18,
-      ),
-      child: LiquidGlass(
-        shape: LiquidRoundedSuperellipse(borderRadius: 26),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(26),
-          child: Stack(
-            children: [
-              Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Color(0x2AFFFFFF), Color(0x12FFFFFF)],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Color(0x12000000),
-                      blurRadius: 12,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
-                ),
-              ),
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: RadialGradient(
-                        center: const Alignment(0, -0.05),
-                        radius: 1.0,
-                        colors: [
-                          Colors.white.withValues(alpha: 0.24),
-                          Colors.white.withValues(alpha: 0.08),
-                          Colors.transparent,
-                        ],
-                        stops: const [0, 0.38, 1],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 24,
-                right: 24,
-                top: 6,
-                child: IgnorePointer(
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: LiquidGlassLayer(
+        settings: const LiquidGlassSettings(
+          thickness: 10,       // Ketebalan kaca/air
+          blur: 2,             // Sangat kecil agar jernih (clear glass), bukan frosted
+          glassColor: Color(0x05FFFFFF),
+          saturation: 1.2,
+          lightIntensity: 3.5, // Cahaya kuat untuk efek pantulan basah/glossy
+          ambientStrength: 0.25,
+        ),
+        child: LiquidGlass(
+          shape: LiquidRoundedSuperellipse(borderRadius: 20),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Stack(
+              children: [
+                // Tint tipis berwarna sesuai tipe (merah/hijau/dll) agar mudah dikenali
+                Positioned.fill(
                   child: Container(
-                    height: 16,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(99),
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.white.withValues(alpha: 0.34),
-                          Colors.white.withValues(alpha: 0.08),
-                        ],
-                      ),
-                    ),
+                    color: palette.accent.withValues(alpha: 0.35),
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 13,
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      palette.icon,
-                      color: palette.accent.withValues(alpha: 0.9),
-                      size: 20,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        message,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 13.6,
-                          height: 1.35,
+                // Efek pantulan cahaya (Specular Highlight) di atas permukaan kaca/air
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.white.withValues(alpha: 0.5),
+                            Colors.white.withValues(alpha: 0.05),
+                            Colors.transparent,
+                            Colors.white.withValues(alpha: 0.15),
+                          ],
+                          stops: const [0.0, 0.25, 0.7, 1.0],
                         ),
                       ),
                     ),
-                    if (showCloseIcon) ...[
-                      const SizedBox(width: 10),
-                      const Icon(
-                        Icons.close_rounded,
-                        size: 18,
-                        color: AppColors.textSecondary,
-                      ),
-                    ],
-                  ],
+                  ),
                 ),
-              ),
-            ],
+                // Konten teks dan ikon
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  child: Row(
+                    children: [
+                      Icon(
+                        palette.icon,
+                        color: Colors.white,
+                        size: 24,
+                        shadows: const [Shadow(color: Colors.black45, blurRadius: 4, offset: Offset(0, 1))],
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text(
+                          message,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14.5,
+                            height: 1.3,
+                            letterSpacing: 0.1,
+                            // Shadow hitam kuat WAJIB ada di clear glass agar teks selalu bisa dibaca
+                            // walau background kamera di belakangnya sangat terang/putih.
+                            shadows: [
+                              Shadow(color: Colors.black87, blurRadius: 6, offset: Offset(0, 2)),
+                              Shadow(color: Colors.black54, blurRadius: 2, offset: Offset(0, 1)),
+                            ],
+                          ),
+                        ),
+                      ),
+                      if (showCloseIcon) ...[
+                        const SizedBox(width: 12),
+                        const Icon(
+                          Icons.close_rounded,
+                          size: 20,
+                          color: Colors.white,
+                          shadows: [Shadow(color: Colors.black45, blurRadius: 4, offset: Offset(0, 1))],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

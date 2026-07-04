@@ -109,4 +109,68 @@ class ProductViewData {
           ingredientsAnalysisTags ?? this.ingredientsAnalysisTags,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'barcode': barcode,
+      'name': name,
+      'calories': calories,
+      'protein': protein,
+      'fat': fat,
+      'imageUrl': imageUrl,
+      'scannedAt': scannedAt.toIso8601String(),
+      'brand': brand,
+      'quantity': quantity,
+      'servingSize': servingSize,
+      'categories': categories,
+      'ingredients': ingredients,
+      'nutriscore': nutriscore,
+      'ecoscore': ecoscore,
+      'ecoscoreIconUrl': ecoscoreIconUrl,
+      'novaGroup': novaGroup,
+      'website': website,
+      'carbohydrates': carbohydrates,
+      'sugars': sugars,
+      'saturatedFat': saturatedFat,
+      'fiber': fiber,
+      'salt': salt,
+      'sodium': sodium,
+      'nutrientLevelsTags': nutrientLevelsTags,
+      'ingredientsAnalysisTags': ingredientsAnalysisTags,
+    };
+  }
+
+  factory ProductViewData.fromJson(Map<String, dynamic> json) {
+    return ProductViewData(
+      barcode: json['barcode'] as String,
+      name: json['name'] as String,
+      calories: (json['calories'] as num).toDouble(),
+      protein: (json['protein'] as num).toDouble(),
+      fat: (json['fat'] as num).toDouble(),
+      imageUrl: json['imageUrl'] as String,
+      scannedAt: DateTime.parse(json['scannedAt'] as String),
+      brand: json['brand'] as String?,
+      quantity: json['quantity'] as String?,
+      servingSize: json['servingSize'] as String?,
+      categories: json['categories'] as String?,
+      ingredients: json['ingredients'] as String?,
+      nutriscore: json['nutriscore'] as String?,
+      ecoscore: json['ecoscore'] as String?,
+      ecoscoreIconUrl: json['ecoscoreIconUrl'] as String?,
+      novaGroup: json['novaGroup'] as int?,
+      website: json['website'] as String?,
+      carbohydrates: (json['carbohydrates'] as num?)?.toDouble(),
+      sugars: (json['sugars'] as num?)?.toDouble(),
+      saturatedFat: (json['saturatedFat'] as num?)?.toDouble(),
+      fiber: (json['fiber'] as num?)?.toDouble(),
+      salt: (json['salt'] as num?)?.toDouble(),
+      sodium: (json['sodium'] as num?)?.toDouble(),
+      nutrientLevelsTags: (json['nutrientLevelsTags'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
+      ingredientsAnalysisTags: (json['ingredientsAnalysisTags'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
+    );
+  }
 }

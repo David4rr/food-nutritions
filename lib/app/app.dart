@@ -6,6 +6,7 @@ import '../features/history/data/daily_nutrition_analytics_repository.dart';
 import '../features/history/data/history_repository.dart';
 import '../features/history/data/weekly_stats_repository.dart';
 import '../features/history/presentation/history_provider.dart';
+import '../features/product/data/product_cache_repository.dart';
 import 'theme/app_style_controller.dart';
 
 class FoodNutritionsApp extends StatefulWidget {
@@ -14,11 +15,13 @@ class FoodNutritionsApp extends StatefulWidget {
     required this.historyRepository,
     required this.weeklyStatsRepository,
     required this.dailyNutritionAnalyticsRepository,
+    required this.productCacheRepository,
   });
 
   final HistoryRepository historyRepository;
   final WeeklyStatsRepository weeklyStatsRepository;
   final DailyNutritionAnalyticsRepository dailyNutritionAnalyticsRepository;
+  final ProductCacheRepository productCacheRepository;
 
   @override
   State<FoodNutritionsApp> createState() => _FoodNutritionsAppState();
@@ -53,6 +56,9 @@ class _FoodNutritionsAppState extends State<FoodNutritionsApp> {
         ),
         ChangeNotifierProvider<AppStyleController>.value(
           value: _appStyleController,
+        ),
+        Provider<ProductCacheRepository>.value(
+          value: widget.productCacheRepository,
         ),
       ],
       child: Consumer<AppStyleController>(

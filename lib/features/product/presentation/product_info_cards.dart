@@ -54,9 +54,10 @@ class ProductSourceCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: EdgeInsets.only(top: 2),
+            padding: const EdgeInsets.only(top: 2),
             child: Icon(
               Icons.public_rounded,
+              size: 20,
               color: isPink ? const Color(0xFFEC407A) : const Color(0xFF5BA7FF),
             ),
           ),

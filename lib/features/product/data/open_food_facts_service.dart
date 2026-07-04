@@ -1,21 +1,85 @@
+import 'dart:async';
+
 import 'package:openfoodfacts/openfoodfacts.dart';
 
+import '../../../shared/utils/retry_helper.dart';
 import 'knowledge_panel_fallback_client.dart';
 import 'product_analysis_fallback_client.dart';
+import 'product_cache.dart';
+import 'product_cache_repository.dart';
 import '../domain/product_view_data.dart';
 
 class OpenFoodFactsService {
   OpenFoodFactsService({
     KnowledgePanelFallbackClient? fallbackClient,
     ProductAnalysisFallbackClient? analysisFallbackClient,
-  }) : _fallbackClient = fallbackClient ?? KnowledgePanelFallbackClient(),
-       _analysisFallbackClient =
-           analysisFallbackClient ?? ProductAnalysisFallbackClient();
+    ProductCacheRepository? cacheRepository,
+  })  : _fallbackClient = fallbackClient ?? KnowledgePanelFallbackClient(),
+        _analysisFallbackClient =
+            analysisFallbackClient ?? ProductAnalysisFallbackClient(),
+        _cacheRepository = cacheRepository;
 
   final KnowledgePanelFallbackClient _fallbackClient;
   final ProductAnalysisFallbackClient _analysisFallbackClient;
+  final ProductCacheRepository? _cacheRepository;
+
+  static const _apiTimeout = Duration(seconds: 15);
+  static const _retryConfig = RetryConfig(
+    maxAttempts: 3,
+    initialDelay: Duration(milliseconds: 500),
+    maxDelay: Duration(seconds: 5),
+  );
 
   Future<ProductViewData> fetchByBarcode(String barcode) async {
+    final cachedData = _cacheRepository?.get(barcode);
+    if (cachedData != null) {
+      return ProductViewData.fromJson(cachedData.jsonData);
+    }
+
+    try {
+      final productData = await retryWithBackoff(
+        () => _fetchProductWithTimeout(barcode),
+        config: _retryConfig,
+        retryIf: (error) {
+          return error is TimeoutException ||
+              error.toString().contains('SocketException') ||
+              error.toString().contains('Connection') ||
+              error.toString().contains('network');
+        },
+      );
+
+      if (_cacheRepository != null) {
+        final cache = ProductCache(
+          barcode: barcode,
+          jsonData: productData.toJson(),
+          cachedAt: DateTime.now(),
+          expiresAt: DateTime.now().add(ProductCache.defaultCacheDuration),
+        );
+        await _cacheRepository!.put(cache);
+      }
+
+      return productData;
+    } on RetryException catch (e) {
+      throw Exception(
+        'Gagal mengambil data produk setelah beberapa percobaan: ${e.lastError}',
+      );
+    } on TimeoutException {
+      throw Exception(
+        'Request timeout: Server OpenFoodFacts tidak merespon dalam ${_apiTimeout.inSeconds} detik',
+      );
+    }
+  }
+
+  Future<ProductViewData> _fetchProductWithTimeout(String barcode) async {
+    return await _fetchProductData(barcode).timeout(
+      _apiTimeout,
+      onTimeout: () => throw TimeoutException(
+        'API call timeout setelah ${_apiTimeout.inSeconds} detik',
+      ),
+    );
+  }
+
+  Future<ProductViewData> _fetchProductData(String barcode) async {
     final config = ProductQueryConfiguration(
       barcode,
       language: OpenFoodFactsLanguage.INDONESIAN,

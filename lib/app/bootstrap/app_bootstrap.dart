@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:openfoodfacts/openfoodfacts.dart';
 
@@ -8,20 +10,28 @@ import '../../features/history/data/history_repository.dart';
 import '../../features/history/data/product_history.dart';
 import '../../features/history/data/product_history_adapter.dart';
 import '../../features/history/data/weekly_stats_repository.dart';
+import '../../features/product/data/product_cache.dart';
+import '../../features/product/data/product_cache_adapter.dart';
+import '../../features/product/data/product_cache_repository.dart';
 
 class AppDependencies {
   const AppDependencies({
     required this.historyRepository,
     required this.weeklyStatsRepository,
     required this.dailyNutritionAnalyticsRepository,
+    required this.productCacheRepository,
   });
 
   final HistoryRepository historyRepository;
   final WeeklyStatsRepository weeklyStatsRepository;
   final DailyNutritionAnalyticsRepository dailyNutritionAnalyticsRepository;
+  final ProductCacheRepository productCacheRepository;
 }
 
 class AppBootstrap {
+  // [NEW] Key yang digunakan untuk menyimpan encryption key di secure storage
+  static const _hiveEncryptionKeyName = 'hive_encryption_key';
+
   Future<AppDependencies> initialize() async {
     return _initializeInternal().timeout(
       const Duration(seconds: 15),
@@ -38,14 +48,30 @@ class AppBootstrap {
       Hive.registerAdapter(ProductHistoryAdapter());
     }
 
+    if (!Hive.isAdapterRegistered(ProductCacheAdapter.adapterTypeId)) {
+      Hive.registerAdapter(ProductCacheAdapter());
+    }
+
+    // [NEW] Ambil atau buat encryption key, lalu simpan di secure storage
+    final cipher = await _getOrCreateHiveCipher();
+
+    // [NEW] Box sensitif (history dan analytics) dibuka dengan cipher enkripsi
     final box = await _openBoxWithRecovery<ProductHistory>(
       HistoryRepository.boxName,
-    );
-    final weeklyStatsBox = await _openBoxWithRecovery<double>(
-      WeeklyStatsRepository.boxName,
+      encryptionCipher: cipher,
     );
     final analyticsBox = await _openBoxWithRecovery<dynamic>(
       DailyNutritionAnalyticsRepository.boxName,
+      encryptionCipher: cipher,
+    );
+
+    // [NOTE] weeklyStatsBox dan productCacheBox menyimpan data agregat / cache
+    // non-sensitif, tidak perlu enkripsi wajib, tapi bisa ditambahkan.
+    final weeklyStatsBox = await _openBoxWithRecovery<double>(
+      WeeklyStatsRepository.boxName,
+    );
+    final productCacheBox = await _openBoxWithRecovery<ProductCache>(
+      ProductCacheRepository.boxName,
     );
 
     OpenFoodAPIConfiguration.userAgent = UserAgent(
@@ -53,21 +79,57 @@ class AppBootstrap {
       version: '1.0.0',
     );
 
+    final productCacheRepository = ProductCacheRepository(productCacheBox);
+    await productCacheRepository.clearExpired();
+
     return AppDependencies(
       historyRepository: HistoryRepository(box),
       weeklyStatsRepository: WeeklyStatsRepository(weeklyStatsBox),
       dailyNutritionAnalyticsRepository: DailyNutritionAnalyticsRepository(
         analyticsBox,
       ),
+      productCacheRepository: productCacheRepository,
     );
   }
 
-  Future<Box<T>> _openBoxWithRecovery<T>(String boxName) async {
+  // [NEW] Ambil key dari FlutterSecureStorage; jika belum ada, generate dan simpan
+  Future<HiveAesCipher> _getOrCreateHiveCipher() async {
+    const secureStorage = FlutterSecureStorage(
+      aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    );
+
+    final existingKey = await secureStorage.read(key: _hiveEncryptionKeyName);
+
+    if (existingKey != null) {
+      final keyBytes = base64Decode(existingKey);
+      return HiveAesCipher(keyBytes);
+    }
+
+    // Generate 256-bit random key baru
+    final newKey = Hive.generateSecureKey();
+    await secureStorage.write(
+      key: _hiveEncryptionKeyName,
+      value: base64Encode(newKey),
+    );
+    return HiveAesCipher(newKey);
+  }
+
+  Future<Box<T>> _openBoxWithRecovery<T>(
+    String boxName, {
+    HiveAesCipher? encryptionCipher,
+  }) async {
     try {
-      return await Hive.openBox<T>(boxName);
+      return await Hive.openBox<T>(
+        boxName,
+        encryptionCipher: encryptionCipher,
+      );
     } on HiveError {
+      // Jika box korup (misal: key berubah), hapus dan buat ulang
       await Hive.deleteBoxFromDisk(boxName);
-      return Hive.openBox<T>(boxName);
+      return Hive.openBox<T>(
+        boxName,
+        encryptionCipher: encryptionCipher,
+      );
     }
   }
 }

@@ -1,11 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../shared/widgets/nutrition_tile.dart';
 import '../data/open_food_facts_service.dart';
+import '../data/product_cache_repository.dart';
 import '../domain/product_view_data.dart';
 import 'product_analysis_sections.dart';
 import 'product_detail_enrichment.dart';
@@ -24,7 +26,6 @@ class ProductDetailPage extends StatefulWidget {
 }
 
 class _ProductDetailPageState extends State<ProductDetailPage> {
-  final _service = OpenFoodFactsService();
   int _visibleMetrics = 0;
   late ProductViewData _item;
   bool _isRefreshing = false;
@@ -163,7 +164,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     if (!shouldEnrichProductDetail(_item)) return;
     setState(() => _isRefreshing = true);
     try {
-      final fresh = await _service.fetchByBarcode(_item.barcode);
+      final cacheRepo = context.read<ProductCacheRepository>();
+      final service = OpenFoodFactsService(cacheRepository: cacheRepo);
+      final fresh = await service.fetchByBarcode(_item.barcode);
       if (!mounted) return;
       setState(() {
         _item = mergeProductDetailData(base: _item, fresh: fresh);
