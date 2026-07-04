@@ -13,6 +13,7 @@ import 'profile_page.dart';
 import 'smart_insight_tile.dart';
 import 'water_tracker_tile.dart';
 import 'weekly_chart_tile.dart';
+import 'calendar_trend_page.dart';
 
 class DashboardContent extends StatelessWidget {
   const DashboardContent({
@@ -201,6 +202,9 @@ class DashboardContent extends StatelessWidget {
                   subtitle: 'Total asupan scan',
                   color: palette.total,
                   large: true,
+                  onTap: () {
+                    context.pushRoute(CalendarTrendPage(targetCalories: target?.calories ?? 2000.0));
+                  },
                 ),
               ],
             ),
@@ -210,6 +214,7 @@ class DashboardContent extends StatelessWidget {
             width: blockWidth,
             height: baseHeight * 1.2,
             weeklyCalories: weeklyCalories,
+            targetCalories: target?.calories ?? 2000.0,
           ),
           SmartInsightTile(
             width: blockWidth,

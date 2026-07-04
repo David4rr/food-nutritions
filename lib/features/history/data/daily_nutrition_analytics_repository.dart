@@ -80,6 +80,16 @@ class DailyNutritionAnalyticsRepository {
     return result;
   }
 
+  Map<String, DailyNutritionAggregate> getAll() {
+    final result = <String, DailyNutritionAggregate>{};
+    for (final key in _box.keys) {
+      if (key is String) {
+        result[key] = _readEntry(key);
+      }
+    }
+    return result;
+  }
+
   Future<void> _adjustEntry({
     required DateTime date,
     required double caloriesDelta,

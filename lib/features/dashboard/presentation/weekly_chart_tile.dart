@@ -8,10 +8,12 @@ class WeeklyChartTile extends StatelessWidget {
     required this.width,
     required this.height,
     required this.weeklyCalories,
+    required this.targetCalories,
   });
 
   final double width;
   final double height;
+  final double targetCalories;
   final Map<String, double> weeklyCalories;
 
   @override
@@ -42,24 +44,24 @@ class WeeklyChartTile extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [startColor, endColor],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: endColor.withValues(alpha: 0.32),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+          gradient: LinearGradient(
+            colors: [startColor, endColor],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: endColor.withValues(alpha: 0.32),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(

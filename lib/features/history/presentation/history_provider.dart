@@ -97,6 +97,10 @@ class HistoryProvider extends ChangeNotifier {
     return _dailyAnalyticsRepository.getForDates(_last7Days());
   }
 
+  Map<String, DailyNutritionAggregate> getAllAnalytics() {
+    return _dailyAnalyticsRepository.getAll();
+  }
+
   List<DateTime> _last7Days() {
     final now = DateTime.now();
     return List.generate(7, (i) => now.subtract(Duration(days: 6 - i)));
