@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 
 import '../../history/presentation/history_provider.dart';
 import '../../scanner/presentation/scanner_page.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
+import '../../../shared/widgets/staggered_animated_tile.dart';
+import '../../../shared/utils/navigator_extension.dart';
 import 'home_empty_state.dart';
 import 'home_history_item.dart';
 
@@ -40,9 +43,7 @@ class HomePage extends StatelessWidget {
         foregroundColor: Colors.white,
         elevation: 2,
         onPressed: () {
-          Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (_) => const ScannerPage()));
+          context.pushRoute(const ScannerPage());
         },
         icon: const Icon(Icons.qr_code_scanner_rounded),
         label: const Text(
@@ -52,7 +53,25 @@ class HomePage extends StatelessWidget {
       ),
       body: SafeArea(
         child: history.isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? LayoutBuilder(
+                builder: (context, constraints) {
+                  final crossAxisCount = constraints.maxWidth > 700 ? 2 : 1;
+                  return GridView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      mainAxisSpacing: 12,
+                      crossAxisSpacing: 12,
+                      mainAxisExtent: 100,
+                    ),
+                    itemCount: 6, // Tampilkan 6 skeleton sebagai placeholder
+                    itemBuilder: (_, __) => const SkeletonTile(
+                      width: double.infinity,
+                      height: 100,
+                    ),
+                  );
+                },
+              )
             : history.items.isEmpty
             ? const HomeEmptyState()
             : LayoutBuilder(
@@ -71,7 +90,10 @@ class HomePage extends StatelessWidget {
                     itemCount: history.items.length,
                     itemBuilder: (_, index) {
                       final item = history.items[index];
-                      return HomeHistoryItem(item: item);
+                      return StaggeredAnimatedTile(
+                        index: index,
+                        child: HomeHistoryItem(item: item),
+                      );
                     },
                   );
                 },

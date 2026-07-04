@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../app/theme/app_colors.dart';
+import 'animated_pressable.dart';
 
 class PopCard extends StatelessWidget {
   const PopCard({
@@ -35,9 +36,8 @@ class PopCard extends StatelessWidget {
 
     if (onTap == null) return content;
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(28),
-      onTap: onTap,
+    return AnimatedPressable(
+      onPressed: onTap,
       child: content,
     );
   }

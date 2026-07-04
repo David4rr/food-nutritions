@@ -100,6 +100,13 @@ class AppTheme {
         seedColor: isPink ? const Color(0xFFE45BA5) : AppColors.accent,
         surface: AppColors.surface,
       ),
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: SpringPageTransitionsBuilder(),
+          TargetPlatform.iOS: SpringPageTransitionsBuilder(),
+          TargetPlatform.macOS: SpringPageTransitionsBuilder(),
+        },
+      ),
     );
 
     return base.copyWith(
@@ -168,6 +175,49 @@ class AppTheme {
       targetCalories: Color(0xFFEF6C57),
       targetProtein: Color(0xFF00A8B5),
       profileCard: Color(0xFF3F51B5),
+    );
+  }
+}
+
+class SpringPageTransitionsBuilder extends PageTransitionsBuilder {
+  const SpringPageTransitionsBuilder();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    if (route.isFirst) {
+      return child;
+    }
+
+    final slideAnimation = Tween<Offset>(
+      begin: const Offset(0.20, 0), // Slide dari 20% sebelah kanan (tidak terlalu jauh)
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: animation,
+        curve: Curves.fastEaseInToSlowEaseOut, // Kurva khas Apple iOS
+        reverseCurve: Curves.fastOutSlowIn,
+      ),
+    );
+
+    final fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutCubic,
+      ),
+    );
+
+    return SlideTransition(
+      position: slideAnimation,
+      child: FadeTransition(
+        opacity: fadeAnimation,
+        child: child,
+      ),
     );
   }
 }

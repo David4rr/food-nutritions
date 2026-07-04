@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../shared/widgets/animated_pressable.dart';
+import '../../../shared/utils/navigator_extension.dart';
 import '../../history/data/product_history.dart';
 import '../../product/presentation/product_detail_page.dart';
 
@@ -11,20 +13,16 @@ class HomeHistoryItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewData = item.toViewData();
-    return Hero(
-      tag: 'product_${item.barcode}_${item.scanDate.toIso8601String()}',
-      child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => ProductDetailPage(product: viewData),
-              ),
-            );
-          },
+    return AnimatedPressable(
+      onPressed: () {
+        context.pushRoute(ProductDetailPage(product: viewData));
+      },
+      child: Hero(
+        tag: 'product_${item.barcode}_${item.scanDate.toIso8601String()}',
+        child: Material(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          clipBehavior: Clip.antiAlias,
           child: Container(
             decoration: BoxDecoration(
               border: Border.all(color: Colors.grey.shade200, width: 1.5),

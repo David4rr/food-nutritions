@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/animated_pressable.dart';
 
 class DashboardMetroTile extends StatelessWidget {
   const DashboardMetroTile({
@@ -26,50 +27,45 @@ class DashboardMetroTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        children: [
-          Positioned(
-            right: horizontal ? 24 : -16,
-            top: horizontal ? null : -16,
-            bottom: horizontal ? -24 : null,
-            child: Icon(
-              icon,
-              size: horizontal ? 100 : (large ? 120 : 80),
-              color: Colors.white.withValues(alpha: 0.15),
+    return AnimatedPressable(
+      onPressed: onTap,
+      child: Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
-          ),
-          Positioned.fill(
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: onTap,
-                splashColor: Colors.white.withValues(alpha: 0.2),
-                highlightColor: Colors.white.withValues(alpha: 0.1),
-                child: Padding(
-                  padding: EdgeInsets.all(large ? 20 : 16),
-                  child: horizontal
-                      ? _horizontalContent(context)
-                      : _verticalContent(context),
-                ),
+          ],
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          children: [
+            Positioned(
+              right: horizontal ? 24 : -16,
+              top: horizontal ? null : -16,
+              bottom: horizontal ? -24 : null,
+              child: Icon(
+                icon,
+                size: horizontal ? 100 : (large ? 120 : 80),
+                color: Colors.white.withValues(alpha: 0.15),
               ),
             ),
-          ),
-        ],
+            Positioned.fill(
+              child: Padding(
+                padding: EdgeInsets.all(large ? 20 : 16),
+                child: horizontal
+                    ? _horizontalContent(context)
+                    : _verticalContent(context),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

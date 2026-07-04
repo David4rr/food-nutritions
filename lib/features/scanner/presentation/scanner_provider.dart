@@ -55,11 +55,14 @@ class ScannerProvider extends ChangeNotifier {
     try {
       final service = OpenFoodFactsService(cacheRepository: _cacheRepository);
       final data = await service.fetchByBarcode(barcode);
+      
+      // Pastikan tanggal scan selalu saat ini, meskipun data berasal dari cache (JSON lama)
+      final scanData = data.copyWith(scannedAt: DateTime.now());
 
       // Simpan ke history
-      await _historyProvider.addScan(data);
+      await _historyProvider.addScan(scanData);
 
-      _result = data;
+      _result = scanData;
       _status = ScanStatus.success;
     } on TimeoutException {
       _error = const ScanError(

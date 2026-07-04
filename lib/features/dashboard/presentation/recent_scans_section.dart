@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/theme/app_theme.dart';
+import '../../../shared/widgets/animated_pressable.dart';
 import '../../../shared/widgets/pop_card.dart';
+import '../../../shared/widgets/staggered_animated_tile.dart';
+import '../../../shared/utils/navigator_extension.dart';
 import '../../history/data/product_history.dart';
 import '../../product/presentation/product_detail_page.dart';
 import '../../product/presentation/product_hero_tag.dart';
@@ -50,15 +54,18 @@ class RecentScansSection extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ...visibleItems.map(
-            (item) => _HistoryTile(
-              item: item,
-              onDelete: onDelete,
-              showDateBadge: showDateBadge,
-              enableDragDelete: enableDragDelete,
-              isPink: isPink,
-            ),
-          ),
+          ...visibleItems.asMap().entries.map(
+                (entry) => StaggeredAnimatedTile(
+                  index: entry.key,
+                  child: _HistoryTile(
+                    item: entry.value,
+                    onDelete: onDelete,
+                    showDateBadge: showDateBadge,
+                    enableDragDelete: enableDragDelete,
+                    isPink: isPink,
+                  ),
+                ),
+              ),
         ],
       );
     }
@@ -70,18 +77,25 @@ class RecentScansSection extends StatelessWidget {
     }
 
     final children = <Widget>[];
+    int staggerIndex = 0;
     for (final entry in grouped.entries) {
       children.add(
-        _DayHeader(text: _dayLabel(entry.value.first.scanDate), isPink: isPink),
+        StaggeredAnimatedTile(
+          index: staggerIndex++,
+          child: _DayHeader(text: _dayLabel(entry.value.first.scanDate), isPink: isPink),
+        ),
       );
       children.addAll(
         entry.value.map(
-          (item) => _HistoryTile(
-            item: item,
-            onDelete: onDelete,
-            showDateBadge: showDateBadge,
-            enableDragDelete: enableDragDelete,
-            isPink: isPink,
+          (item) => StaggeredAnimatedTile(
+            index: staggerIndex++,
+            child: _HistoryTile(
+              item: item,
+              onDelete: onDelete,
+              showDateBadge: showDateBadge,
+              enableDragDelete: enableDragDelete,
+              isPink: isPink,
+            ),
           ),
         ),
       );
@@ -183,13 +197,9 @@ class _HistoryTile extends StatelessWidget {
           ],
         ),
         clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => ProductDetailPage(product: viewData),
-              ),
-            );
+        child: AnimatedPressable(
+          onPressed: () {
+            context.pushRoute(ProductDetailPage(product: viewData));
           },
           child: Stack(
             children: [
@@ -326,6 +336,13 @@ class _HistoryTile extends StatelessWidget {
 
     return LongPressDraggable<ProductHistory>(
       data: item,
+      // [FIX] Mengkalkulasi titik tengah dari constrained box (lebar 220) agar persis di tengah jari
+      dragAnchorStrategy: (draggable, context, position) {
+        final renderBox = context.findRenderObject() as RenderBox?;
+        final height = renderBox?.size.height ?? 90.0;
+        return Offset(220 / 2, height / 2);
+      },
+      onDragStarted: () => HapticFeedback.heavyImpact(),
       feedback: Material(
         color: Colors.transparent,
         child: ConstrainedBox(

@@ -5,6 +5,7 @@ import '../../history/data/daily_nutrition_analytics_repository.dart';
 import '../../history/data/product_history.dart';
 import '../../history/presentation/history_page.dart';
 import '../../scanner/presentation/scanner_page.dart';
+import '../../../shared/utils/navigator_extension.dart';
 import 'dashboard_metro_tile.dart';
 import 'dashboard_progress_tile.dart';
 import 'food_grade_tile.dart';
@@ -82,9 +83,7 @@ class DashboardContent extends StatelessWidget {
                   title: 'Scan\nProduk',
                   subtitle: 'Baca barcode untuk nutrisi',
                   color: palette.scan,
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const ScannerPage()),
-                  ),
+                  onTap: () => context.pushRoute(const ScannerPage()),
                   large: true,
                 ),
                 SizedBox(width: spacing),
@@ -101,11 +100,7 @@ class DashboardContent extends StatelessWidget {
                         title: 'Profil',
                         subtitle: 'Atur target',
                         color: palette.profile,
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const ProfilePage(),
-                          ),
-                        ),
+                        onTap: () => context.pushRoute(const ProfilePage()),
                       ),
                       DashboardMetroTile(
                         width: baseWidth,
@@ -114,11 +109,7 @@ class DashboardContent extends StatelessWidget {
                         title: 'Riwayat',
                         subtitle: '${todayItems.length} scan',
                         color: palette.history,
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const HistoryPage(),
-                          ),
-                        ),
+                        onTap: () => context.pushRoute(const HistoryPage()),
                       ),
                     ],
                   ),
