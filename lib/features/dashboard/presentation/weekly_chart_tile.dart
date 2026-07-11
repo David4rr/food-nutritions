@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_theme.dart';
+import '../../../shared/utils/navigator_extension.dart';
+import '../../../shared/widgets/animated_pressable.dart';
+import '../../analytics/presentation/analytics_page.dart';
 
 class WeeklyChartTile extends StatelessWidget {
   const WeeklyChartTile({
@@ -40,10 +43,14 @@ class WeeklyChartTile extends StatelessWidget {
       (max, value) => value > max ? value : max,
     );
 
-    return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
+    return AnimatedPressable(
+      onPressed: () {
+        context.pushRoute(const AnalyticsPage());
+      },
+      child: Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [startColor, endColor],
             begin: Alignment.topLeft,
@@ -140,6 +147,7 @@ class WeeklyChartTile extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }
