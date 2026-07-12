@@ -8,6 +8,7 @@ import '../../../shared/widgets/top_liquid_snackbar.dart';
 import '../data/product_history.dart';
 import 'history_provider.dart';
 import '../../dashboard/presentation/dashboard_sections.dart';
+import '../../../shared/routes/expanding_page_route.dart'; // ponytail: Expanding header
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
@@ -106,62 +107,77 @@ class _HistoryPageState extends State<HistoryPage>
     final isPink =
         Theme.of(context).extension<AppVisualMeta>()?.isPink ?? false;
 
+    const tileColor = Color(0xFFF59E6D); // palette.history
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Riwayat Nutrisi'),
-        actions: [
-          DragTarget<ProductHistory>(
-            onWillAcceptWithDetails: (details) {
-              if (!_isTrashHover) {
-                setState(() => _isTrashHover = true);
-              }
-              return true;
-            },
-            onLeave: (_) {
-              if (_isTrashHover) {
-                setState(() => _isTrashHover = false);
-              }
-            },
-            onAcceptWithDetails: (details) {
-              setState(() => _isTrashHover = false);
-              _playTrashDropFx();
-              _deleteItem(history, details.data);
-            },
-            builder: (context, candidateData, rejectedData) {
-              final isActive = _isTrashHover || candidateData.isNotEmpty;
-              final isEnabled = history.items.isNotEmpty;
-              return Padding(
-                padding: const EdgeInsets.only(right: 6),
-                child: IconButton(
-                  tooltip: 'Tap: Hapus Semua | Drop: Hapus Item',
-                  onPressed: isEnabled ? () => _confirmClearAll(history) : null,
-                  icon: _TrashDropIcon(
-                    isActive: isActive,
-                    isEnabled: isEnabled,
-                    flash: _isTrashFlash,
-                    shakeTurns: _trashShakeTurns.value,
-                    isPink: isPink,
-                  ),
-                ),
-              );
-            },
+      backgroundColor: tileColor,
+      appBar: ExpandingPageHeader(
+        child: AppBar(
+          backgroundColor: tileColor,
+          elevation: 0,
+          title: const Text(
+            'Riwayat Nutrisi',
+            style: TextStyle(color: Colors.white),
           ),
-        ],
-      ),
-      body: history.items.isEmpty
-          ? const Center(child: Text('Belum ada riwayat.'))
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                RecentScansSection(
-                  items: history.items,
-                  maxItems: null,
-                  groupByDay: true,
-                  showDateBadge: false,
-                  enableDragDelete: true,
-                ),
-              ],
+          iconTheme: const IconThemeData(color: Colors.white),
+          actions: [
+            DragTarget<ProductHistory>(
+              onWillAcceptWithDetails: (details) {
+                if (!_isTrashHover) {
+                  setState(() => _isTrashHover = true);
+                }
+                return true;
+              },
+              onLeave: (_) {
+                if (_isTrashHover) {
+                  setState(() => _isTrashHover = false);
+                }
+              },
+              onAcceptWithDetails: (details) {
+                setState(() => _isTrashHover = false);
+                _playTrashDropFx();
+                _deleteItem(history, details.data);
+              },
+              builder: (context, candidateData, rejectedData) {
+                final isActive = _isTrashHover || candidateData.isNotEmpty;
+                final isEnabled = history.items.isNotEmpty;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: IconButton(
+                    tooltip: 'Tap: Hapus Semua | Drop: Hapus Item',
+                    onPressed: isEnabled
+                        ? () => _confirmClearAll(history)
+                        : null,
+                    icon: _TrashDropIcon(
+                      isActive: isActive,
+                      isEnabled: isEnabled,
+                      flash: _isTrashFlash,
+                      shakeTurns: _trashShakeTurns.value,
+                      isPink: isPink,
+                    ),
+                  ),
+                );
+              },
             ),
+          ],
+        ),
+      ),
+      body: Container(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        child: history.items.isEmpty
+            ? const Center(child: Text('Belum ada riwayat.'))
+            : ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  RecentScansSection(
+                    items: history.items,
+                    maxItems: null,
+                    groupByDay: true,
+                    showDateBadge: false,
+                    enableDragDelete: true,
+                  ),
+                ],
+              ),
+      ),
     );
   }
 }

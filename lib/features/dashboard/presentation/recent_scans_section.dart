@@ -55,17 +55,17 @@ class RecentScansSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ...visibleItems.asMap().entries.map(
-                (entry) => StaggeredAnimatedTile(
-                  index: entry.key,
-                  child: _HistoryTile(
-                    item: entry.value,
-                    onDelete: onDelete,
-                    showDateBadge: showDateBadge,
-                    enableDragDelete: enableDragDelete,
-                    isPink: isPink,
-                  ),
-                ),
+            (entry) => StaggeredAnimatedTile(
+              index: entry.key,
+              child: _HistoryTile(
+                item: entry.value,
+                onDelete: onDelete,
+                showDateBadge: showDateBadge,
+                enableDragDelete: enableDragDelete,
+                isPink: isPink,
               ),
+            ),
+          ),
         ],
       );
     }
@@ -82,7 +82,10 @@ class RecentScansSection extends StatelessWidget {
       children.add(
         StaggeredAnimatedTile(
           index: staggerIndex++,
-          child: _DayHeader(text: _dayLabel(entry.value.first.scanDate), isPink: isPink),
+          child: _DayHeader(
+            text: _dayLabel(entry.value.first.scanDate),
+            isPink: isPink,
+          ),
         ),
       );
       children.addAll(

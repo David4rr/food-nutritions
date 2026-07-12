@@ -3,12 +3,7 @@ import '../../../app/theme/app_theme.dart';
 import '../domain/analytics_engine.dart';
 import 'analytics_charts.dart';
 
-enum ShareCardType {
-  summary,
-  trend,
-  macro,
-  radar,
-}
+enum ShareCardType { summary, trend, macro, radar }
 
 abstract class ShareCardTemplate extends StatelessWidget {
   const ShareCardTemplate({
@@ -23,12 +18,17 @@ abstract class ShareCardTemplate extends StatelessWidget {
   final bool showWatermark;
 
   Widget buildCard(BuildContext context, {required Widget child}) {
-    final isPink = Theme.of(context).extension<AppVisualMeta>()?.isPink ?? false;
-    final primaryColor = isPink ? const Color(0xFFE45BA5) : const Color(0xFF2FB8A4);
-    
+    final isPink =
+        Theme.of(context).extension<AppVisualMeta>()?.isPink ?? false;
+    final primaryColor = isPink
+        ? const Color(0xFFE45BA5)
+        : const Color(0xFF2FB8A4);
+
     // Apple Health style uses an off-white background
-    final bgColor = isTransparent ? Colors.transparent : const Color(0xFFF2F2F7);
-    
+    final bgColor = isTransparent
+        ? Colors.transparent
+        : const Color(0xFFF2F2F7);
+
     return Container(
       width: 1080, // Native Instagram Story width
       color: bgColor,
@@ -49,7 +49,9 @@ abstract class ShareCardTemplate extends StatelessWidget {
                   child: Text(
                     '@FoodNutritions',
                     style: TextStyle(
-                      color: isTransparent ? Colors.white : Colors.grey.shade500,
+                      color: isTransparent
+                          ? Colors.white
+                          : Colors.grey.shade500,
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
                       letterSpacing: 0.5,
@@ -71,7 +73,8 @@ abstract class ShareCardTemplate extends StatelessWidget {
       decoration: BoxDecoration(
         color: isTransparent ? Colors.transparent : Colors.white,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: null, // Forces NO shadow regardless of transparency mode (or keeps it clean)
+        boxShadow:
+            null, // Forces NO shadow regardless of transparency mode (or keeps it clean)
       ),
       child: child,
     );
@@ -80,12 +83,20 @@ abstract class ShareCardTemplate extends StatelessWidget {
 
 // 1. SUMMARY CARD
 class SummaryShareCard extends ShareCardTemplate {
-  const SummaryShareCard({super.key, required super.data, super.isTransparent, super.showWatermark});
+  const SummaryShareCard({
+    super.key,
+    required super.data,
+    super.isTransparent,
+    super.showWatermark,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final isPink = Theme.of(context).extension<AppVisualMeta>()?.isPink ?? false;
-    final primaryColor = isPink ? const Color(0xFFE45BA5) : const Color(0xFF2FB8A4);
+    final isPink =
+        Theme.of(context).extension<AppVisualMeta>()?.isPink ?? false;
+    final primaryColor = isPink
+        ? const Color(0xFFE45BA5)
+        : const Color(0xFF2FB8A4);
 
     return buildCard(
       context,
@@ -96,8 +107,8 @@ class SummaryShareCard extends ShareCardTemplate {
             Text(
               'Ringkasan Mingguan',
               style: TextStyle(
-                fontSize: 28, 
-                fontWeight: FontWeight.bold, 
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
                 letterSpacing: -0.5,
                 color: isTransparent ? Colors.white : Colors.black87,
               ),
@@ -106,10 +117,16 @@ class SummaryShareCard extends ShareCardTemplate {
             Row(
               children: [
                 Expanded(
-                  child: _buildMetric('Kalori Rata-rata', '${data.avgCalories.toStringAsFixed(0)} kkal'),
+                  child: _buildMetric(
+                    'Kalori Rata-rata',
+                    '${data.avgCalories.toStringAsFixed(0)} kkal',
+                  ),
                 ),
                 Expanded(
-                  child: _buildMetric('Protein Rata-rata', '${data.avgProtein.toStringAsFixed(0)} g'),
+                  child: _buildMetric(
+                    'Protein Rata-rata',
+                    '${data.avgProtein.toStringAsFixed(0)} g',
+                  ),
                 ),
               ],
             ),
@@ -117,7 +134,9 @@ class SummaryShareCard extends ShareCardTemplate {
             Row(
               children: [
                 Icon(
-                  data.calorieTrendPercent >= 0 ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                  data.calorieTrendPercent >= 0
+                      ? Icons.arrow_upward_rounded
+                      : Icons.arrow_downward_rounded,
                   color: primaryColor,
                   size: 20,
                 ),
@@ -126,8 +145,10 @@ class SummaryShareCard extends ShareCardTemplate {
                   child: Text(
                     '${data.calorieTrendPercent.abs().toStringAsFixed(1)}% vs minggu lalu',
                     style: TextStyle(
-                      fontSize: 16, 
-                      color: isTransparent ? Colors.white : Colors.grey.shade700, 
+                      fontSize: 16,
+                      color: isTransparent
+                          ? Colors.white
+                          : Colors.grey.shade700,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -145,18 +166,18 @@ class SummaryShareCard extends ShareCardTemplate {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label, 
+          label,
           style: TextStyle(
-            fontSize: 14, 
+            fontSize: 14,
             color: isTransparent ? Colors.white : Colors.grey.shade600,
             fontWeight: isTransparent ? FontWeight.w600 : FontWeight.normal,
-          )
+          ),
         ),
         const SizedBox(height: 4),
         Text(
-          value, 
+          value,
           style: TextStyle(
-            fontSize: 24, 
+            fontSize: 24,
             fontWeight: FontWeight.bold,
             color: isTransparent ? Colors.white : Colors.black87,
           ),
@@ -168,13 +189,23 @@ class SummaryShareCard extends ShareCardTemplate {
 
 // 2. TREND CARD
 class TrendShareCard extends ShareCardTemplate {
-  const TrendShareCard({super.key, required super.data, super.isTransparent, super.showWatermark});
+  const TrendShareCard({
+    super.key,
+    required super.data,
+    super.isTransparent,
+    super.showWatermark,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final isPink = Theme.of(context).extension<AppVisualMeta>()?.isPink ?? false;
-    final primaryColor = isPink ? const Color(0xFFE45BA5) : const Color(0xFF2FB8A4);
-    final secondaryColor = isPink ? const Color(0xFF2FB8A4) : const Color(0xFFE45BA5);
+    final isPink =
+        Theme.of(context).extension<AppVisualMeta>()?.isPink ?? false;
+    final primaryColor = isPink
+        ? const Color(0xFFE45BA5)
+        : const Color(0xFF2FB8A4);
+    final secondaryColor = isPink
+        ? const Color(0xFF2FB8A4)
+        : const Color(0xFFE45BA5);
 
     return buildCard(
       context,
@@ -185,8 +216,8 @@ class TrendShareCard extends ShareCardTemplate {
             Text(
               'Asupan Energi',
               style: TextStyle(
-                fontSize: 28, 
-                fontWeight: FontWeight.bold, 
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
                 letterSpacing: -0.5,
                 color: isTransparent ? Colors.white : Colors.black87,
               ),
@@ -195,7 +226,7 @@ class TrendShareCard extends ShareCardTemplate {
             Text(
               'Kalori & Protein 7 Hari Terakhir',
               style: TextStyle(
-                fontSize: 16, 
+                fontSize: 16,
                 color: isTransparent ? Colors.white : Colors.grey.shade600,
                 fontWeight: isTransparent ? FontWeight.w600 : FontWeight.normal,
               ),
@@ -218,13 +249,23 @@ class TrendShareCard extends ShareCardTemplate {
 
 // 3. MACRO CARD
 class MacroShareCard extends ShareCardTemplate {
-  const MacroShareCard({super.key, required super.data, super.isTransparent, super.showWatermark});
+  const MacroShareCard({
+    super.key,
+    required super.data,
+    super.isTransparent,
+    super.showWatermark,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final isPink = Theme.of(context).extension<AppVisualMeta>()?.isPink ?? false;
-    final primaryColor = isPink ? const Color(0xFFE45BA5) : const Color(0xFF2FB8A4);
-    final secondaryColor = isPink ? const Color(0xFF2FB8A4) : const Color(0xFFE45BA5);
+    final isPink =
+        Theme.of(context).extension<AppVisualMeta>()?.isPink ?? false;
+    final primaryColor = isPink
+        ? const Color(0xFFE45BA5)
+        : const Color(0xFF2FB8A4);
+    final secondaryColor = isPink
+        ? const Color(0xFF2FB8A4)
+        : const Color(0xFFE45BA5);
 
     return buildCard(
       context,
@@ -239,18 +280,30 @@ class MacroShareCard extends ShareCardTemplate {
                   Text(
                     'Distribusi Makro',
                     style: TextStyle(
-                      fontSize: 24, 
-                      fontWeight: FontWeight.bold, 
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
                       letterSpacing: -0.5,
                       color: isTransparent ? Colors.white : Colors.black87,
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _buildLegend(secondaryColor, 'Protein', '${(data.macroProtein * 100).toStringAsFixed(1)}%'),
+                  _buildLegend(
+                    secondaryColor,
+                    'Protein',
+                    '${(data.macroProtein * 100).toStringAsFixed(1)}%',
+                  ),
                   const SizedBox(height: 8),
-                  _buildLegend(primaryColor, 'Karbohidrat', '${(data.macroCarbs * 100).toStringAsFixed(1)}%'),
+                  _buildLegend(
+                    primaryColor,
+                    'Karbohidrat',
+                    '${(data.macroCarbs * 100).toStringAsFixed(1)}%',
+                  ),
                   const SizedBox(height: 8),
-                  _buildLegend(Colors.amber, 'Lemak', '${(data.macroFat * 100).toStringAsFixed(1)}%'),
+                  _buildLegend(
+                    Colors.amber,
+                    'Lemak',
+                    '${(data.macroFat * 100).toStringAsFixed(1)}%',
+                  ),
                 ],
               ),
             ),
@@ -275,24 +328,28 @@ class MacroShareCard extends ShareCardTemplate {
   Widget _buildLegend(Color color, String label, String value) {
     return Row(
       children: [
-        Container(width: 12, height: 12, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
         const SizedBox(width: 8),
         Text(
-          label, 
+          label,
           style: TextStyle(
-            fontSize: 16, 
+            fontSize: 16,
             color: isTransparent ? Colors.white : Colors.black87,
             fontWeight: isTransparent ? FontWeight.w600 : FontWeight.normal,
-          )
+          ),
         ),
         const Spacer(),
         Text(
-          value, 
+          value,
           style: TextStyle(
-            fontSize: 16, 
-            fontWeight: FontWeight.bold, 
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
             color: isTransparent ? Colors.white : Colors.black87,
-          )
+          ),
         ),
       ],
     );
@@ -301,12 +358,20 @@ class MacroShareCard extends ShareCardTemplate {
 
 // 4. RADAR CARD
 class RadarShareCard extends ShareCardTemplate {
-  const RadarShareCard({super.key, required super.data, super.isTransparent, super.showWatermark});
+  const RadarShareCard({
+    super.key,
+    required super.data,
+    super.isTransparent,
+    super.showWatermark,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final isPink = Theme.of(context).extension<AppVisualMeta>()?.isPink ?? false;
-    final primaryColor = isPink ? const Color(0xFFE45BA5) : const Color(0xFF2FB8A4);
+    final isPink =
+        Theme.of(context).extension<AppVisualMeta>()?.isPink ?? false;
+    final primaryColor = isPink
+        ? const Color(0xFFE45BA5)
+        : const Color(0xFF2FB8A4);
 
     return buildCard(
       context,
@@ -316,8 +381,8 @@ class RadarShareCard extends ShareCardTemplate {
             Text(
               'Keseimbangan Nutrisi',
               style: TextStyle(
-                fontSize: 28, 
-                fontWeight: FontWeight.bold, 
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
                 letterSpacing: -0.5,
                 color: isTransparent ? Colors.white : Colors.black87,
               ),
@@ -326,7 +391,7 @@ class RadarShareCard extends ShareCardTemplate {
             Text(
               'Rasio Kualitas Asupan',
               style: TextStyle(
-                fontSize: 16, 
+                fontSize: 16,
                 color: isTransparent ? Colors.white : Colors.grey.shade600,
                 fontWeight: isTransparent ? FontWeight.w600 : FontWeight.normal,
               ),

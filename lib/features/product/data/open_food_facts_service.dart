@@ -14,10 +14,10 @@ class OpenFoodFactsService {
     KnowledgePanelFallbackClient? fallbackClient,
     ProductAnalysisFallbackClient? analysisFallbackClient,
     ProductCacheRepository? cacheRepository,
-  })  : _fallbackClient = fallbackClient ?? KnowledgePanelFallbackClient(),
-        _analysisFallbackClient =
-            analysisFallbackClient ?? ProductAnalysisFallbackClient(),
-        _cacheRepository = cacheRepository;
+  }) : _fallbackClient = fallbackClient ?? KnowledgePanelFallbackClient(),
+       _analysisFallbackClient =
+           analysisFallbackClient ?? ProductAnalysisFallbackClient(),
+       _cacheRepository = cacheRepository;
 
   final KnowledgePanelFallbackClient _fallbackClient;
   final ProductAnalysisFallbackClient _analysisFallbackClient;
@@ -55,7 +55,7 @@ class OpenFoodFactsService {
           cachedAt: DateTime.now(),
           expiresAt: DateTime.now().add(ProductCache.defaultCacheDuration),
         );
-        await _cacheRepository!.put(cache);
+        await _cacheRepository.put(cache);
       }
 
       return productData;

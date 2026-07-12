@@ -17,7 +17,8 @@ class AnimatedPressable extends StatefulWidget {
   State<AnimatedPressable> createState() => _AnimatedPressableState();
 }
 
-class _AnimatedPressableState extends State<AnimatedPressable> with SingleTickerProviderStateMixin {
+class _AnimatedPressableState extends State<AnimatedPressable>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 
@@ -27,7 +28,9 @@ class _AnimatedPressableState extends State<AnimatedPressable> with SingleTicker
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 100), // Cepat saat ditekan
-      reverseDuration: const Duration(milliseconds: 400), // Memantul saat dilepas (spring)
+      reverseDuration: const Duration(
+        milliseconds: 400,
+      ), // Memantul saat dilepas (spring)
     );
 
     _scaleAnimation = Tween<double>(begin: 1.0, end: widget.scale).animate(
@@ -72,10 +75,7 @@ class _AnimatedPressableState extends State<AnimatedPressable> with SingleTicker
       onTapDown: _onTapDown,
       onTapUp: _onTapUp,
       onTapCancel: _onTapCancel,
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: widget.child,
-      ),
+      child: ScaleTransition(scale: _scaleAnimation, child: widget.child),
     );
   }
 }

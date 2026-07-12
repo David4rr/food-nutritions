@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:intl/date_symbol_data_local.dart';
+
 import 'app/app.dart';
 import 'app/bootstrap/app_bootstrap.dart';
 import 'app/theme/app_colors.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('id_ID', null);
   runApp(const _BootstrapGate());
 }
 
@@ -42,10 +45,7 @@ class _BootstrapGateState extends State<_BootstrapGate> {
         }
 
         if (snapshot.hasError) {
-          return _ErrorScreen(
-            error: snapshot.error,
-            onRetry: _retry,
-          );
+          return _ErrorScreen(error: snapshot.error, onRetry: _retry);
         }
 
         final dependencies = snapshot.data!;

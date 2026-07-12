@@ -42,9 +42,8 @@ class ProductDetailHeaderCard extends StatelessWidget {
                   child: CachedNetworkImage(
                     imageUrl: imageUrl,
                     fit: BoxFit.contain,
-                    placeholder: (_, _) => const Center(
-                      child: CircularProgressIndicator(),
-                    ),
+                    placeholder: (_, _) =>
+                        const Center(child: CircularProgressIndicator()),
                     errorWidget: (_, _, _) => const Icon(
                       Icons.broken_image_rounded,
                       size: 64,

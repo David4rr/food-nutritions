@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 
 class SkeletonLoader extends StatefulWidget {
-  const SkeletonLoader({
-    super.key,
-    required this.child,
-    this.isLoading = true,
-  });
+  const SkeletonLoader({super.key, required this.child, this.isLoading = true});
 
   final Widget child;
   final bool isLoading;
@@ -75,7 +71,11 @@ class _SlidingGradientTransform extends GradientTransform {
 
   @override
   Matrix4? transform(Rect bounds, {TextDirection? textDirection}) {
-    return Matrix4.translationValues(bounds.width * (slidePercent * 2 - 1), 0.0, 0.0);
+    return Matrix4.translationValues(
+      bounds.width * (slidePercent * 2 - 1),
+      0.0,
+      0.0,
+    );
   }
 }
 
@@ -128,7 +128,11 @@ class SkeletonProductDetail extends StatelessWidget {
             const SizedBox(height: 24),
             Container(width: 150, height: 24, color: Colors.grey.shade200),
             const SizedBox(height: 8),
-            Container(width: double.infinity, height: 32, color: Colors.grey.shade200),
+            Container(
+              width: double.infinity,
+              height: 32,
+              color: Colors.grey.shade200,
+            ),
             const SizedBox(height: 32),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,

@@ -11,20 +11,19 @@ class AnalyticsShareService {
   final repaintKey = GlobalKey();
 
   Widget wrap(Widget template) {
-    return RepaintBoundary(
-      key: repaintKey,
-      child: template,
-    );
+    return RepaintBoundary(key: repaintKey, child: template);
   }
 
   Future<Uint8List?> capture({double pixelRatio = 6.0}) async {
     try {
       // Perlu delay sedikit untuk memastikan frame ter-render sempurna
       await Future.delayed(const Duration(milliseconds: 50));
-      
-      final boundary = repaintKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+
+      final boundary =
+          repaintKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
       if (boundary == null) return null;
-      
+
       final image = await boundary.toImage(pixelRatio: pixelRatio);
       final byteData = await image.toByteData(format: ImageByteFormat.png);
       return byteData?.buffer.asUint8List();
@@ -38,7 +37,9 @@ class AnalyticsShareService {
     final dir = await getTemporaryDirectory();
     final file = File('${dir.path}/analisis_nutrisi.png');
     await file.writeAsBytes(bytes);
-    await Share.shareXFiles([XFile(file.path)], text: 'Hasil Analisis Nutrisiku dari Food Nutrition App');
+    await Share.shareXFiles([
+      XFile(file.path),
+    ], text: 'Hasil Analisis Nutrisiku dari Food Nutrition App');
   }
 
   Future<bool> saveToGallery(Uint8List bytes) async {

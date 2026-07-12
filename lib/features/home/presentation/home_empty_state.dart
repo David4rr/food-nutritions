@@ -24,16 +24,10 @@ class _HomeEmptyStateState extends State<HomeEmptyState>
       duration: const Duration(milliseconds: 700),
     );
     _slideAnimation = Tween<double>(begin: 30.0, end: 0.0).animate(
-      CurvedAnimation(
-        parent: _entranceController,
-        curve: Curves.easeOutCubic,
-      ),
+      CurvedAnimation(parent: _entranceController, curve: Curves.easeOutCubic),
     );
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _entranceController,
-        curve: Curves.easeOut,
-      ),
+      CurvedAnimation(parent: _entranceController, curve: Curves.easeOut),
     );
 
     // Floating (Bobbing) Animation
@@ -42,10 +36,7 @@ class _HomeEmptyStateState extends State<HomeEmptyState>
       duration: const Duration(milliseconds: 1500),
     )..repeat(reverse: true);
     _floatAnimation = Tween<double>(begin: -5.0, end: 5.0).animate(
-      CurvedAnimation(
-        parent: _floatingController,
-        curve: Curves.easeInOutSine,
-      ),
+      CurvedAnimation(parent: _floatingController, curve: Curves.easeInOutSine),
     );
 
     _entranceController.forward();
@@ -127,4 +118,3 @@ class _HomeEmptyStateState extends State<HomeEmptyState>
     );
   }
 }
-

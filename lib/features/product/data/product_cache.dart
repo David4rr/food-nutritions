@@ -1,4 +1,3 @@
-import 'package:hive/hive.dart';
 
 class ProductCache {
   ProductCache({

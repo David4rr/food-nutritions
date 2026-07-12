@@ -14,36 +14,31 @@ class _SpringPageRoute<T> extends PageRouteBuilder<T> {
   final Widget page;
 
   _SpringPageRoute({required this.page})
-      : super(
-          pageBuilder: (context, animation, secondaryAnimation) => page,
-          transitionDuration: const Duration(milliseconds: 350),
-          reverseTransitionDuration: const Duration(milliseconds: 350),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            final slideAnimation = Tween<Offset>(
-              begin: const Offset(0.20, 0),
-              end: Offset.zero,
-            ).animate(
-              CurvedAnimation(
-                parent: animation,
-                curve: Curves.fastEaseInToSlowEaseOut,
-                reverseCurve: Curves.fastOutSlowIn,
-              ),
-            );
+    : super(
+        pageBuilder: (context, animation, secondaryAnimation) => page,
+        transitionDuration: const Duration(milliseconds: 350),
+        reverseTransitionDuration: const Duration(milliseconds: 350),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final slideAnimation =
+              Tween<Offset>(
+                begin: const Offset(0.20, 0),
+                end: Offset.zero,
+              ).animate(
+                CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.fastEaseInToSlowEaseOut,
+                  reverseCurve: Curves.fastOutSlowIn,
+                ),
+              );
 
-            final fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-              CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOutCubic,
-              ),
-            );
+          final fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+            CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+          );
 
-            return SlideTransition(
-              position: slideAnimation,
-              child: FadeTransition(
-                opacity: fadeAnimation,
-                child: child,
-              ),
-            );
-          },
-        );
+          return SlideTransition(
+            position: slideAnimation,
+            child: FadeTransition(opacity: fadeAnimation, child: child),
+          );
+        },
+      );
 }

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
@@ -28,8 +27,8 @@ class TopLiquidSnackBarBanner extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       child: LiquidGlassLayer(
         settings: const LiquidGlassSettings(
-          thickness: 10,       // Ketebalan kaca/air
-          blur: 2,             // Sangat kecil agar jernih (clear glass), bukan frosted
+          thickness: 10, // Ketebalan kaca/air
+          blur: 2, // Sangat kecil agar jernih (clear glass), bukan frosted
           glassColor: Color(0x05FFFFFF),
           saturation: 1.2,
           lightIntensity: 3.5, // Cahaya kuat untuk efek pantulan basah/glossy
@@ -69,14 +68,23 @@ class TopLiquidSnackBarBanner extends StatelessWidget {
                 ),
                 // Konten teks dan ikon
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   child: Row(
                     children: [
                       Icon(
                         palette.icon,
                         color: Colors.white,
                         size: 24,
-                        shadows: const [Shadow(color: Colors.black45, blurRadius: 4, offset: Offset(0, 1))],
+                        shadows: const [
+                          Shadow(
+                            color: Colors.black45,
+                            blurRadius: 4,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -91,8 +99,16 @@ class TopLiquidSnackBarBanner extends StatelessWidget {
                             // Shadow hitam kuat WAJIB ada di clear glass agar teks selalu bisa dibaca
                             // walau background kamera di belakangnya sangat terang/putih.
                             shadows: [
-                              Shadow(color: Colors.black87, blurRadius: 6, offset: Offset(0, 2)),
-                              Shadow(color: Colors.black54, blurRadius: 2, offset: Offset(0, 1)),
+                              Shadow(
+                                color: Colors.black87,
+                                blurRadius: 6,
+                                offset: Offset(0, 2),
+                              ),
+                              Shadow(
+                                color: Colors.black54,
+                                blurRadius: 2,
+                                offset: Offset(0, 1),
+                              ),
                             ],
                           ),
                         ),
@@ -103,7 +119,13 @@ class TopLiquidSnackBarBanner extends StatelessWidget {
                           Icons.close_rounded,
                           size: 20,
                           color: Colors.white,
-                          shadows: [Shadow(color: Colors.black45, blurRadius: 4, offset: Offset(0, 1))],
+                          shadows: [
+                            Shadow(
+                              color: Colors.black45,
+                              blurRadius: 4,
+                              offset: Offset(0, 1),
+                            ),
+                          ],
                         ),
                       ],
                     ],

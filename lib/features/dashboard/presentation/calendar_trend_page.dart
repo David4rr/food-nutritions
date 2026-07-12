@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../history/presentation/history_provider.dart';
 import '../../../shared/widgets/animated_pressable.dart';
+import '../../../shared/routes/expanding_page_route.dart'; // ponytail: Expanding header
 
 class MonthData {
   const MonthData({
@@ -75,11 +76,19 @@ class _CalendarTrendPageState extends State<CalendarTrendPage> {
     final analytics = history.getAllAnalytics();
     final target = widget.targetCalories > 0 ? widget.targetCalories : 2000.0;
 
-    final isPink = Theme.of(context).extension<AppVisualMeta>()?.isPink ?? false;
-    final baseColor = isPink ? const Color(0xFFE45BA5) : const Color(0xFF2FB8A4);
+    final isPink =
+        Theme.of(context).extension<AppVisualMeta>()?.isPink ?? false;
+    final baseColor = isPink
+        ? const Color(0xFFE45BA5)
+        : const Color(0xFF2FB8A4);
 
-    final daysInMonth = DateTime(_selectedDate.year, _selectedDate.month + 1, 0).day;
-    final emptyStartBlocks = DateTime(_selectedDate.year, _selectedDate.month, 1).weekday - 1;
+    final daysInMonth = DateTime(
+      _selectedDate.year,
+      _selectedDate.month + 1,
+      0,
+    ).day;
+    final emptyStartBlocks =
+        DateTime(_selectedDate.year, _selectedDate.month, 1).weekday - 1;
     final monthData = MonthData(
       year: _selectedDate.year,
       month: _selectedDate.month,
@@ -87,153 +96,199 @@ class _CalendarTrendPageState extends State<CalendarTrendPage> {
       emptyStartBlocks: emptyStartBlocks,
     );
 
+    const tileColor = Color(0xFF9B8AFB); // palette.total
+
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: const Text('Aktivitas Bulanan', style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
+      backgroundColor: tileColor,
+      appBar: ExpandingPageHeader(
+        child: AppBar(
+          backgroundColor: tileColor,
+          elevation: 0,
+          title: const Text(
+            'Aktivitas Bulanan',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+          centerTitle: true,
+          iconTheme: const IconThemeData(color: Colors.white),
+        ),
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Month Navigation & Filter
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  IconButton(
-                    onPressed: _prevMonth,
-                    icon: const Icon(Icons.chevron_left_rounded, size: 32),
-                  ),
-                  AnimatedPressable(
-                    onPressed: _pickMonthYear,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: baseColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.calendar_month_rounded, size: 18, color: baseColor),
-                          const SizedBox(width: 8),
-                          Text(
-                            DateFormat('MMMM yyyy').format(_selectedDate),
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+      body: Container(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Month Navigation & Filter
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      onPressed: _prevMonth,
+                      icon: const Icon(Icons.chevron_left_rounded, size: 32),
+                    ),
+                    AnimatedPressable(
+                      onPressed: _pickMonthYear,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: baseColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.calendar_month_rounded,
+                              size: 18,
                               color: baseColor,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            Text(
+                              DateFormat('MMMM yyyy').format(_selectedDate),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: baseColor,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  IconButton(
-                    onPressed: _nextMonth,
-                    icon: const Icon(Icons.chevron_right_rounded, size: 32),
-                  ),
-                ],
-              ),
-            ),
-            
-            // Legend
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text('Kurang', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                  const SizedBox(width: 8),
-                  for (var i = 1; i <= 5; i++) ...[
-                    Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: i == 1 ? Colors.grey.shade200 : baseColor.withValues(alpha: i / 5.0),
-                        borderRadius: BorderRadius.circular(3),
-                      ),
+                    IconButton(
+                      onPressed: _nextMonth,
+                      icon: const Icon(Icons.chevron_right_rounded, size: 32),
                     ),
-                    const SizedBox(width: 4),
                   ],
-                  const Text('Target', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                ],
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            
-            // Weekday Headers
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'].map((day) {
-                  return Expanded(
-                    child: Center(
-                      child: Text(
-                        day,
-                        style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            
-            // Calendar Grid
-            Expanded(
-              child: Padding(
+
+              // Legend
+              Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  transitionBuilder: (child, animation) {
-                    return FadeTransition(
-                      opacity: animation,
-                      child: SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(0.0, 0.05),
-                          end: Offset.zero,
-                        ).animate(animation),
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: GridView.builder(
-                    key: ValueKey('${_selectedDate.year}-${_selectedDate.month}'),
-                    physics: const BouncingScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 7,
-                      mainAxisSpacing: 8,
-                      crossAxisSpacing: 8,
-                      childAspectRatio: 0.75, // Membuat kotak lebih tinggi untuk teks kalori
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'Kurang',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
                     ),
-                    itemCount: monthData.emptyStartBlocks + monthData.daysInMonth,
-                    itemBuilder: (context, index) {
-                      if (index < monthData.emptyStartBlocks) {
-                        return const SizedBox.shrink();
-                      }
-                      final day = index - monthData.emptyStartBlocks + 1;
-                      final date = DateTime(monthData.year, monthData.month, day);
-                      final key = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+                    const SizedBox(width: 8),
+                    for (var i = 1; i <= 5; i++) ...[
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: i == 1
+                              ? Colors.grey.shade200
+                              : baseColor.withValues(alpha: i / 5.0),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                    const Text(
+                      'Target',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
 
-                      final data = analytics[key];
-                      final calories = data?.calories ?? 0.0;
+              // Weekday Headers
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']
+                      .map((day) {
+                        return Expanded(
+                          child: Center(
+                            child: Text(
+                              day,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        );
+                      })
+                      .toList(),
+                ),
+              ),
+              const SizedBox(height: 12),
 
-                      return _CalendarBox(
-                        date: date,
-                        calories: calories,
-                        target: target,
-                        baseColor: baseColor,
-                        delayIndex: day,
+              // Calendar Grid
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    transitionBuilder: (child, animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0.0, 0.05),
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: child,
+                        ),
                       );
                     },
+                    child: GridView.builder(
+                      key: ValueKey(
+                        '${_selectedDate.year}-${_selectedDate.month}',
+                      ),
+                      physics: const BouncingScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 7,
+                        mainAxisSpacing: 8,
+                        crossAxisSpacing: 8,
+                        childAspectRatio:
+                            0.75, // Membuat kotak lebih tinggi untuk teks kalori
+                      ),
+                      itemCount:
+                          monthData.emptyStartBlocks + monthData.daysInMonth,
+                      itemBuilder: (context, index) {
+                        if (index < monthData.emptyStartBlocks) {
+                          return const SizedBox.shrink();
+                        }
+                        final day = index - monthData.emptyStartBlocks + 1;
+                        final date = DateTime(
+                          monthData.year,
+                          monthData.month,
+                          day,
+                        );
+                        final key =
+                            '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+                        final data = analytics[key];
+                        final calories = data?.calories ?? 0.0;
+
+                        return _CalendarBox(
+                          date: date,
+                          calories: calories,
+                          target: target,
+                          baseColor: baseColor,
+                          delayIndex: day,
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -259,7 +314,8 @@ class _CalendarBox extends StatefulWidget {
   State<_CalendarBox> createState() => _CalendarBoxState();
 }
 
-class _CalendarBoxState extends State<_CalendarBox> with SingleTickerProviderStateMixin {
+class _CalendarBoxState extends State<_CalendarBox>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   bool _isHovered = false;
@@ -271,7 +327,10 @@ class _CalendarBoxState extends State<_CalendarBox> with SingleTickerProviderSta
       vsync: this,
       duration: const Duration(milliseconds: 400),
     );
-    _scaleAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeOutBack);
+    _scaleAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutBack,
+    );
 
     Future.delayed(Duration(milliseconds: (widget.delayIndex % 31) * 15), () {
       if (mounted) _controller.forward();
@@ -313,18 +372,27 @@ class _CalendarBoxState extends State<_CalendarBox> with SingleTickerProviderSta
               ),
               child: Row(
                 children: [
-                  Icon(Icons.calendar_month_rounded, color: Colors.white.withValues(alpha: 0.8), size: 20),
+                  Icon(
+                    Icons.calendar_month_rounded,
+                    color: Colors.white.withValues(alpha: 0.8),
+                    size: 20,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       formatted,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                   Text(
                     '${widget.calories.toStringAsFixed(0)} kkal',
                     style: TextStyle(
-                      color: widget.baseColor.withValues(alpha: 0.9).withAlpha(255),
+                      color: widget.baseColor
+                          .withValues(alpha: 0.9)
+                          .withAlpha(255),
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
@@ -347,7 +415,8 @@ class _CalendarBoxState extends State<_CalendarBox> with SingleTickerProviderSta
     }
 
     final hasRecord = widget.calories > 0;
-    final isDarkBackground = hasRecord && (widget.calories / widget.target) > 0.5;
+    final isDarkBackground =
+        hasRecord && (widget.calories / widget.target) > 0.5;
     final textColor = isDarkBackground ? Colors.white : Colors.black87;
     final subTextColor = isDarkBackground ? Colors.white70 : Colors.black54;
 
@@ -370,7 +439,9 @@ class _CalendarBoxState extends State<_CalendarBox> with SingleTickerProviderSta
             color: boxColor,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: hasRecord ? widget.baseColor.withValues(alpha: 0.3) : Colors.transparent,
+              color: hasRecord
+                  ? widget.baseColor.withValues(alpha: 0.3)
+                  : Colors.transparent,
               width: 1,
             ),
             boxShadow: _isHovered && hasRecord
@@ -379,7 +450,7 @@ class _CalendarBoxState extends State<_CalendarBox> with SingleTickerProviderSta
                       color: widget.baseColor.withValues(alpha: 0.4),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
-                    )
+                    ),
                   ]
                 : [],
           ),

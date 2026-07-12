@@ -5,7 +5,6 @@ import '../../history/data/daily_nutrition_analytics_repository.dart';
 import '../../history/data/product_history.dart';
 import '../../history/presentation/history_page.dart';
 import '../../scanner/presentation/scanner_page.dart';
-import '../../../shared/utils/navigator_extension.dart';
 import 'dashboard_metro_tile.dart';
 import 'dashboard_progress_tile.dart';
 import 'food_grade_tile.dart';
@@ -14,8 +13,10 @@ import 'smart_insight_tile.dart';
 import 'water_tracker_tile.dart';
 import 'weekly_chart_tile.dart';
 import 'calendar_trend_page.dart';
+import '../../analytics/presentation/analytics_page.dart';
+import '../../../shared/routes/expanding_route.dart'; // ponytail: Added route
 
-class DashboardContent extends StatelessWidget {
+class DashboardContent extends StatefulWidget {
   const DashboardContent({
     super.key,
     required this.availableWidth,
@@ -44,7 +45,29 @@ class DashboardContent extends StatelessWidget {
   final VoidCallback? onHydrationCelebrate;
 
   @override
+  State<DashboardContent> createState() => _DashboardContentState();
+}
+
+class _DashboardContentState extends State<DashboardContent> {
+  final _scanTileKey = GlobalKey();
+  final _profileTileKey = GlobalKey();
+  final _historyTileKey = GlobalKey();
+  final _totalTileKey = GlobalKey();
+  final _weeklyTileKey = GlobalKey();
+
+  @override
   Widget build(BuildContext context) {
+    final availableWidth = widget.availableWidth;
+    final spacing = widget.spacing;
+    final todayItems = widget.todayItems;
+    final todayCalories = widget.todayCalories;
+    final todayProtein = widget.todayProtein;
+    final weeklyCalories = widget.weeklyCalories;
+    final dailyAnalytics = widget.dailyAnalytics;
+    final target = widget.target;
+    final profileBox = widget.profileBox;
+    final onHydrationCelebrate = widget.onHydrationCelebrate;
+
     final palette =
         Theme.of(context).extension<DashboardTilePalette>() ??
         const DashboardTilePalette(
@@ -78,13 +101,18 @@ class DashboardContent extends StatelessWidget {
             child: Row(
               children: [
                 DashboardMetroTile(
+                  key: _scanTileKey,
                   width: baseWidth,
                   height: doubleHeight,
                   icon: Icons.qr_code_scanner_rounded,
                   title: 'Scan\nProduk',
                   subtitle: 'Baca barcode untuk nutrisi',
                   color: palette.scan,
-                  onTap: () => context.pushRoute(const ScannerPage()),
+                  onTap: () => context.expandTo(
+                    tileKey: _scanTileKey,
+                    page: const ScannerPage(),
+                    tileColor: palette.scan,
+                  ),
                   large: true,
                 ),
                 SizedBox(width: spacing),
@@ -95,22 +123,32 @@ class DashboardContent extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       DashboardMetroTile(
+                        key: _profileTileKey,
                         width: baseWidth,
                         height: baseHeight,
                         icon: Icons.person_rounded,
                         title: 'Profil',
                         subtitle: 'Atur target',
                         color: palette.profile,
-                        onTap: () => context.pushRoute(const ProfilePage()),
+                        onTap: () => context.expandTo(
+                          tileKey: _profileTileKey,
+                          page: const ProfilePage(),
+                          tileColor: palette.profile,
+                        ),
                       ),
                       DashboardMetroTile(
+                        key: _historyTileKey,
                         width: baseWidth,
                         height: baseHeight,
                         icon: Icons.history_rounded,
                         title: 'Riwayat',
                         subtitle: '${todayItems.length} scan',
                         color: palette.history,
-                        onTap: () => context.pushRoute(const HistoryPage()),
+                        onTap: () => context.expandTo(
+                          tileKey: _historyTileKey,
+                          page: const HistoryPage(),
+                          tileColor: palette.history,
+                        ),
                       ),
                     ],
                   ),
@@ -161,7 +199,7 @@ class DashboardContent extends StatelessWidget {
                           icon: Icons.local_fire_department_rounded,
                           label: 'Target Kalori',
                           current: todayCalories,
-                          target: target!.calories,
+                          target: target.calories,
                           unit: 'kkal',
                           color: palette.targetCalories,
                         ),
@@ -171,7 +209,7 @@ class DashboardContent extends StatelessWidget {
                           icon: Icons.egg_alt_rounded,
                           label: 'Target Protein',
                           current: todayProtein,
-                          target: target!.protein,
+                          target: target.protein,
                           unit: 'g',
                           color: palette.targetProtein,
                         ),
@@ -195,6 +233,7 @@ class DashboardContent extends StatelessWidget {
                 ),
                 SizedBox(width: spacing),
                 DashboardMetroTile(
+                  key: _totalTileKey,
                   width: baseWidth,
                   height: doubleHeight,
                   icon: Icons.local_fire_department_outlined,
@@ -203,7 +242,13 @@ class DashboardContent extends StatelessWidget {
                   color: palette.total,
                   large: true,
                   onTap: () {
-                    context.pushRoute(CalendarTrendPage(targetCalories: target?.calories ?? 2000.0));
+                    context.expandTo(
+                      tileKey: _totalTileKey,
+                      page: CalendarTrendPage(
+                        targetCalories: target?.calories ?? 2000.0,
+                      ),
+                      tileColor: palette.total,
+                    );
                   },
                 ),
               ],
@@ -211,10 +256,23 @@ class DashboardContent extends StatelessWidget {
           ),
 
           WeeklyChartTile(
+            key: _weeklyTileKey,
             width: blockWidth,
             height: baseHeight * 1.2,
             weeklyCalories: weeklyCalories,
             targetCalories: target?.calories ?? 2000.0,
+            onTap: () {
+              final visualMeta = Theme.of(context).extension<AppVisualMeta>();
+              final isPink = visualMeta?.isPink ?? false;
+              final startColor = isPink
+                  ? const Color(0xFFF06292)
+                  : const Color(0xFF8E44AD);
+              context.expandTo(
+                tileKey: _weeklyTileKey,
+                page: const AnalyticsPage(),
+                tileColor: startColor,
+              );
+            },
           ),
           SmartInsightTile(
             width: blockWidth,

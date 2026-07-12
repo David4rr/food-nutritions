@@ -10,6 +10,7 @@ import '../../history/presentation/history_provider.dart';
 import '../../product/data/product_cache_repository.dart';
 import '../../product/presentation/product_detail_page.dart';
 import 'scanner_provider.dart';
+import '../../../shared/routes/expanding_page_route.dart'; // ponytail: Expanding header
 
 class ScannerPage extends StatefulWidget {
   const ScannerPage({super.key});
@@ -53,17 +54,17 @@ class _ScannerPageState extends State<ScannerPage> {
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
           transitionDuration: const Duration(milliseconds: 400),
-          pageBuilder: (_, __, ___) => ProductDetailPage(product: product),
-          transitionsBuilder: (_, animation, __, child) {
-            final slideAnimation = Tween<Offset>(
-              begin: const Offset(0.0, 1.0),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutExpo));
-            
-            return SlideTransition(
-              position: slideAnimation,
-              child: child,
-            );
+          pageBuilder: (_, _, _) => ProductDetailPage(product: product),
+          transitionsBuilder: (_, animation, _, child) {
+            final slideAnimation =
+                Tween<Offset>(
+                  begin: const Offset(0.0, 1.0),
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(parent: animation, curve: Curves.easeOutExpo),
+                );
+
+            return SlideTransition(position: slideAnimation, child: child);
           },
         ),
       );
@@ -73,7 +74,9 @@ class _ScannerPageState extends State<ScannerPage> {
         context,
         message: err.message,
         type: AppNotificationType.error,
-        duration: const Duration(seconds: 5), // [FIX] Durasi lebih lama agar sempat terbaca
+        duration: const Duration(
+          seconds: 5,
+        ), // [FIX] Durasi lebih lama agar sempat terbaca
       );
       _scannerProvider.reset();
     }
@@ -93,7 +96,9 @@ class _ScannerPageState extends State<ScannerPage> {
   Future<void> _showManualInputDialog() async {
     // [FIX] Matikan kamera sepenuhnya sebelum memunculkan dialog/keyboard
     await _controller.stop();
-    await Future.delayed(const Duration(milliseconds: 50)); // Jeda minimal untuk stabilitas engine
+    await Future.delayed(
+      const Duration(milliseconds: 50),
+    ); // Jeda minimal untuk stabilitas engine
 
     String inputText = '';
     final barcode = await showModalBottomSheet<String>(
@@ -150,7 +155,10 @@ class _ScannerPageState extends State<ScannerPage> {
                       color: AppColors.textSecondary.withValues(alpha: 0.5),
                       letterSpacing: 1.0,
                     ),
-                    prefixIcon: const Icon(Icons.qr_code_scanner_rounded, color: AppColors.accentStrong),
+                    prefixIcon: const Icon(
+                      Icons.qr_code_scanner_rounded,
+                      color: AppColors.accentStrong,
+                    ),
                     filled: true,
                     fillColor: AppColors.background,
                     border: OutlineInputBorder(
@@ -159,9 +167,15 @@ class _ScannerPageState extends State<ScannerPage> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(color: AppColors.accentStrong, width: 2),
+                      borderSide: const BorderSide(
+                        color: AppColors.accentStrong,
+                        width: 2,
+                      ),
                     ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
                   ),
                   onSubmitted: (v) => Navigator.of(ctx).pop(v.trim()),
                 ),
@@ -172,12 +186,20 @@ class _ScannerPageState extends State<ScannerPage> {
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.accentStrong,
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       elevation: 0,
                     ),
                     onPressed: () => Navigator.of(ctx).pop(inputText.trim()),
-                    child: const Text('Cari Produk', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                    child: const Text(
+                      'Cari Produk',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -206,18 +228,21 @@ class _ScannerPageState extends State<ScannerPage> {
         final isLoading = _scannerProvider.isLoading;
 
         return Scaffold(
+          backgroundColor: const Color(0xFF2FB8A4), // palette.scan
           resizeToAvoidBottomInset: false,
           extendBodyBehindAppBar: true, // [NEW] Immersive AppBar
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            iconTheme: const IconThemeData(color: Colors.white),
-            title: const Text(
-              'Scan Barcode',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-                shadows: [Shadow(color: Colors.black45, blurRadius: 8)],
+          appBar: ExpandingPageHeader(
+            child: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              iconTheme: const IconThemeData(color: Colors.white),
+              title: const Text(
+                'Scan Barcode',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  shadows: [Shadow(color: Colors.black45, blurRadius: 8)],
+                ),
               ),
             ),
           ),
@@ -263,9 +288,9 @@ class _ScannerPageState extends State<ScannerPage> {
                       const SizedBox(height: 6),
                       Text(
                         'Mengambil data nutrisi produk',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.white70,
-                        ),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodySmall?.copyWith(color: Colors.white70),
                       ),
                     ],
                   ),
@@ -286,7 +311,9 @@ class _ScannerPageState extends State<ScannerPage> {
                           color: Colors.white70,
                           fontWeight: FontWeight.w500,
                           fontSize: 14,
-                          shadows: [Shadow(color: Colors.black87, blurRadius: 4)],
+                          shadows: [
+                            Shadow(color: Colors.black87, blurRadius: 4),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -296,9 +323,14 @@ class _ScannerPageState extends State<ScannerPage> {
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
-                            side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                            side: BorderSide(
+                              color: Colors.white.withValues(alpha: 0.2),
+                            ),
                           ),
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
                           elevation: 0,
                         ),
                         onPressed: _showManualInputDialog,

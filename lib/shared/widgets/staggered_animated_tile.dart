@@ -27,7 +27,9 @@ class _StaggeredAnimatedTileState extends State<StaggeredAnimatedTile>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 600), // Sedikit lebih lambat agar spring terasa
+      duration: const Duration(
+        milliseconds: 600,
+      ), // Sedikit lebih lambat agar spring terasa
     );
     _animation = CurvedAnimation(
       parent: _controller,
@@ -40,7 +42,9 @@ class _StaggeredAnimatedTileState extends State<StaggeredAnimatedTile>
   Future<void> _startAnimation() async {
     // Delay sesuai index
     if (widget.index > 0 && widget.delayMs > 0) {
-      await Future.delayed(Duration(milliseconds: widget.index * widget.delayMs));
+      await Future.delayed(
+        Duration(milliseconds: widget.index * widget.delayMs),
+      );
     }
     if (mounted) {
       setState(() => _isStarted = true);
@@ -58,10 +62,7 @@ class _StaggeredAnimatedTileState extends State<StaggeredAnimatedTile>
   Widget build(BuildContext context) {
     if (!_isStarted) {
       // Menjaga agar dimensi (layout) tetap ada meski belum terlihat
-      return Opacity(
-        opacity: 0.0,
-        child: widget.child,
-      );
+      return Opacity(opacity: 0.0, child: widget.child);
     }
 
     return AnimatedBuilder(

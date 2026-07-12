@@ -168,9 +168,10 @@ class ProductViewData {
       nutrientLevelsTags: (json['nutrientLevelsTags'] as List<dynamic>?)
           ?.map((e) => e as String)
           .toList(),
-      ingredientsAnalysisTags: (json['ingredientsAnalysisTags'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList(),
+      ingredientsAnalysisTags:
+          (json['ingredientsAnalysisTags'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList(),
     );
   }
 }

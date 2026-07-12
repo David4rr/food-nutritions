@@ -194,30 +194,29 @@ class SpringPageTransitionsBuilder extends PageTransitionsBuilder {
       return child;
     }
 
-    final slideAnimation = Tween<Offset>(
-      begin: const Offset(0.20, 0), // Slide dari 20% sebelah kanan (tidak terlalu jauh)
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: animation,
-        curve: Curves.fastEaseInToSlowEaseOut, // Kurva khas Apple iOS
-        reverseCurve: Curves.fastOutSlowIn,
-      ),
-    );
+    final slideAnimation =
+        Tween<Offset>(
+          begin: const Offset(
+            0.20,
+            0,
+          ), // Slide dari 20% sebelah kanan (tidak terlalu jauh)
+          end: Offset.zero,
+        ).animate(
+          CurvedAnimation(
+            parent: animation,
+            curve: Curves.fastEaseInToSlowEaseOut, // Kurva khas Apple iOS
+            reverseCurve: Curves.fastOutSlowIn,
+          ),
+        );
 
-    final fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: animation,
-        curve: Curves.easeOutCubic,
-      ),
-    );
+    final fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
 
     return SlideTransition(
       position: slideAnimation,
-      child: FadeTransition(
-        opacity: fadeAnimation,
-        child: child,
-      ),
+      child: FadeTransition(opacity: fadeAnimation, child: child),
     );
   }
 }

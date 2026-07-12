@@ -74,7 +74,7 @@ class _ModernDualTrendPainter extends CustomPainter {
     final int count = calories.length;
     final double width = size.width;
     final double height = size.height - 20; // Leave space for X-axis labels
-    
+
     final barWidth = 14.0;
     final totalSpacing = width - (barWidth * count);
     final spacing = totalSpacing / (count <= 1 ? 1 : count - 1);
@@ -84,16 +84,21 @@ class _ModernDualTrendPainter extends CustomPainter {
 
     // 1. Draw Target Line (Calories)
     final targetCalY = height - ((targetCalories / maxCal) * height);
-    _drawDashedLine(canvas, width, targetCalY, Colors.grey.withValues(alpha: 0.3));
+    _drawDashedLine(
+      canvas,
+      width,
+      targetCalY,
+      Colors.grey.withValues(alpha: 0.3),
+    );
 
     // 2. Draw Bars (Background Track + Foreground Gradient)
     final trackPaint = Paint()
       ..color = Colors.grey.withValues(alpha: 0.1)
       ..style = PaintingStyle.fill;
-      
+
     for (int i = 0; i < calories.length; i++) {
       final x = i * (barWidth + spacing);
-      
+
       // Track (Background)
       final trackRect = RRect.fromRectAndRadius(
         Rect.fromLTWH(x, 0, barWidth, height),
@@ -115,20 +120,20 @@ class _ModernDualTrendPainter extends CustomPainter {
           end: Alignment.bottomCenter,
         ).createShader(barRect.outerRect)
         ..style = PaintingStyle.fill;
-        
+
       canvas.drawRRect(barRect, gradientPaint);
     }
 
     // 3. Draw Protein Line with Glow
     final path = Path();
     final points = <Offset>[];
-    
+
     for (int i = 0; i < protein.length; i++) {
       final x = i * (barWidth + spacing) + (barWidth / 2);
       final lineY = height - ((protein[i] / maxPro) * height * progress);
       final point = Offset(x, lineY);
       points.add(point);
-      
+
       if (i == 0) {
         path.moveTo(x, lineY);
       } else {
@@ -160,32 +165,54 @@ class _ModernDualTrendPainter extends CustomPainter {
     canvas.drawPath(path, linePaint);
 
     // Data points (Dots)
-    final dotPaint = Paint()..color = Colors.white..style = PaintingStyle.fill;
-    final dotStroke = Paint()..color = secondaryColor..strokeWidth = 2..style = PaintingStyle.stroke;
-    
+    final dotPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    final dotStroke = Paint()
+      ..color = secondaryColor
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+
     for (final point in points) {
       canvas.drawCircle(point, 4, dotPaint);
       canvas.drawCircle(point, 4, dotStroke);
     }
-    
+
     // X-Axis Labels (Days of week)
-    final days = ['S', 'S', 'R', 'K', 'J', 'S', 'M']; // Sen, Sel, Rab, Kam, Jum, Sab, Min
+    final days = [
+      'S',
+      'S',
+      'R',
+      'K',
+      'J',
+      'S',
+      'M',
+    ]; // Sen, Sel, Rab, Kam, Jum, Sab, Min
     for (int i = 0; i < count; i++) {
       final x = i * (barWidth + spacing) + (barWidth / 2);
       final textPainter = TextPainter(
         text: TextSpan(
           text: days[i],
-          style: TextStyle(color: Colors.grey.shade500, fontSize: 11, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.grey.shade500,
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         textDirection: TextDirection.ltr,
       );
       textPainter.layout();
-      textPainter.paint(canvas, Offset(x - (textPainter.width / 2), size.height - 15));
+      textPainter.paint(
+        canvas,
+        Offset(x - (textPainter.width / 2), size.height - 15),
+      );
     }
   }
 
   void _drawDashedLine(Canvas canvas, double width, double y, Color color) {
-    final paint = Paint()..color = color..strokeWidth = 1.5;
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1.5;
     const dashWidth = 6.0;
     const dashSpace = 6.0;
     double startX = 0.0;
@@ -273,7 +300,7 @@ class _ConcentricRingsPainter extends CustomPainter {
 
     void drawRing(double radius, double percent, Color baseColor) {
       final rect = Rect.fromCircle(center: center, radius: radius);
-      
+
       // Track
       final trackPaint = Paint()
         ..color = baseColor.withValues(alpha: 0.15)
@@ -292,7 +319,7 @@ class _ConcentricRingsPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round
         ..strokeWidth = strokeWidth;
-        
+
       // Fake shadow/glow at the cap
       final glowPaint = Paint()
         ..color = baseColor.withValues(alpha: 0.5)
@@ -307,8 +334,8 @@ class _ConcentricRingsPainter extends CustomPainter {
 
     // Max cap visual at 100% to prevent overdrawing rings
     drawRing(radius1, protein.clamp(0.0, 1.0), secondaryColor); // Protein
-    drawRing(radius2, carbs.clamp(0.0, 1.0), primaryColor);   // Carbs
-    drawRing(radius3, fat.clamp(0.0, 1.0), Colors.amber);     // Fat
+    drawRing(radius2, carbs.clamp(0.0, 1.0), primaryColor); // Carbs
+    drawRing(radius3, fat.clamp(0.0, 1.0), Colors.amber); // Fat
   }
 
   @override
@@ -328,7 +355,7 @@ class AnimatedNutrientRadar extends StatelessWidget {
     this.textColor = Colors.black54,
   });
 
-  final List<double> values; 
+  final List<double> values;
   final Color primaryColor;
   final Color textColor;
 
@@ -372,17 +399,17 @@ class _ModernRadarPainter extends CustomPainter {
 
     final center = Offset(size.width / 2, size.height / 2);
     final radius = math.min(size.width / 2, size.height / 2) - 10;
-    
+
     // Circular Grid (Modern Apple style prefers circles over sharp polygons)
     final gridPaint = Paint()
       ..color = Colors.grey.withValues(alpha: 0.15)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
-      
+
     for (int i = 1; i <= 4; i++) {
       canvas.drawCircle(center, radius * (i / 4), gridPaint);
     }
-    
+
     // Draw axes
     final axisPaint = Paint()
       ..color = Colors.grey.withValues(alpha: 0.2)
@@ -423,7 +450,7 @@ class _ModernRadarPainter extends CustomPainter {
         ],
       ).createShader(Rect.fromCircle(center: center, radius: radius))
       ..style = PaintingStyle.fill;
-      
+
     final strokePaint = Paint()
       ..color = primaryColor
       ..style = PaintingStyle.stroke
@@ -432,35 +459,44 @@ class _ModernRadarPainter extends CustomPainter {
 
     canvas.drawPath(path, fillPaint);
     canvas.drawPath(path, strokePaint);
-    
-    
+
     // Vertex Dots and Text Labels
-    final dotPaint = Paint()..color = Colors.white..style = PaintingStyle.fill;
-    final dotStroke = Paint()..color = primaryColor..strokeWidth = 2..style = PaintingStyle.stroke;
-    
+    final dotPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    final dotStroke = Paint()
+      ..color = primaryColor
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+
     final labels = ['Kalori', 'Protein', 'Lemak', 'Karbo', 'Serat', 'Sodium'];
-    
+
     for (int i = 0; i < 6; i++) {
       // Draw Dot
       canvas.drawCircle(points[i], 4, dotPaint);
       canvas.drawCircle(points[i], 4, dotStroke);
-      
+
       // Draw Label
       final double angle = (i * math.pi / 3) - (math.pi / 2);
       // Position label slightly further out from the max radius
-      final double labelRadius = radius + 15; 
+      final double labelRadius = radius + 15;
       final double lx = center.dx + labelRadius * math.cos(angle);
       final double ly = center.dy + labelRadius * math.sin(angle);
-      
+
       final textPainter = TextPainter(
         text: TextSpan(
           text: labels[i],
-          style: TextStyle(color: textColor, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: -0.2),
+          style: TextStyle(
+            color: textColor,
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            letterSpacing: -0.2,
+          ),
         ),
         textDirection: TextDirection.ltr,
         textAlign: TextAlign.center,
       );
-      
+
       textPainter.layout();
       canvas.save();
       // Center the text on the calculated coordinate

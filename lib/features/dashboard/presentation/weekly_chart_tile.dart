@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_theme.dart';
-import '../../../shared/utils/navigator_extension.dart';
 import '../../../shared/widgets/animated_pressable.dart';
-import '../../analytics/presentation/analytics_page.dart';
 
 class WeeklyChartTile extends StatelessWidget {
   const WeeklyChartTile({
@@ -12,12 +10,14 @@ class WeeklyChartTile extends StatelessWidget {
     required this.height,
     required this.weeklyCalories,
     required this.targetCalories,
+    this.onTap,
   });
 
   final double width;
   final double height;
   final double targetCalories;
   final Map<String, double> weeklyCalories;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -44,9 +44,7 @@ class WeeklyChartTile extends StatelessWidget {
     );
 
     return AnimatedPressable(
-      onPressed: () {
-        context.pushRoute(const AnalyticsPage());
-      },
+      onPressed: onTap,
       child: Container(
         width: width,
         height: height,
@@ -69,85 +67,85 @@ class WeeklyChartTile extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(
-                  Icons.insights_rounded,
-                  color: Colors.white,
-                  size: 24,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Tren Mingguan',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.insights_rounded,
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    size: 24,
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Expanded(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: last7Days.map((day) {
-                  final cal = dailyCalories[_dateKey(day)] ?? 0;
-                  final ratio = maxCal == 0
-                      ? 0.0
-                      : (cal / maxCal).clamp(0.0, 1.0);
-                  return Flexible(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          if (cal > 0)
-                            Text(
-                              cal.toStringAsFixed(0),
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 9,
+                  const SizedBox(width: 8),
+                  Text(
+                    'Tren Mingguan',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: last7Days.map((day) {
+                    final cal = dailyCalories[_dateKey(day)] ?? 0;
+                    final ratio = maxCal == 0
+                        ? 0.0
+                        : (cal / maxCal).clamp(0.0, 1.0);
+                    return Flexible(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            if (cal > 0)
+                              Text(
+                                cal.toStringAsFixed(0),
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 9,
+                                ),
+                              ),
+                            const SizedBox(height: 4),
+                            Container(
+                              width: double.infinity,
+                              height: 40 * ratio + 4,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(4),
                               ),
                             ),
-                          const SizedBox(height: 4),
-                          Container(
-                            width: double.infinity,
-                            height: 40 * ratio + 4,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(4),
+                            const SizedBox(height: 4),
+                            Text(
+                              [
+                                'Sen',
+                                'Sel',
+                                'Rab',
+                                'Kam',
+                                'Jum',
+                                'Sab',
+                                'Min',
+                              ][day.weekday - 1],
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            [
-                              'Sen',
-                              'Sel',
-                              'Rab',
-                              'Kam',
-                              'Jum',
-                              'Sab',
-                              'Min',
-                            ][day.weekday - 1],
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                }).toList(),
+                    );
+                  }).toList(),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
       ),
     );
   }

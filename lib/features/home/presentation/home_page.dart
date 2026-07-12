@@ -65,10 +65,8 @@ class HomePage extends StatelessWidget {
                       mainAxisExtent: 100,
                     ),
                     itemCount: 6, // Tampilkan 6 skeleton sebagai placeholder
-                    itemBuilder: (_, __) => const SkeletonTile(
-                      width: double.infinity,
-                      height: 100,
-                    ),
+                    itemBuilder: (_, _) =>
+                        const SkeletonTile(width: double.infinity, height: 100),
                   );
                 },
               )

@@ -6,6 +6,7 @@ import '../domain/nutrition_target.dart';
 import 'dashboard_sections.dart';
 import 'macro_summary_card.dart';
 import 'profile_target_form.dart';
+import '../../../shared/routes/expanding_route.dart'; // ponytail: Expanding header
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -175,31 +176,46 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    const tileColor = Color(0xFF5BA7FF); // palette.profile
     return Scaffold(
-      appBar: AppBar(title: const Text('Profil Pengguna')),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
-        children: [
-          ProfileTargetForm(
-            ageController: _ageController,
-            weightController: _weightController,
-            heightController: _heightController,
-            gender: _gender,
-            activity: _activity,
-            onGenderChanged: (v) => setState(() => _gender = v),
-            onActivityChanged: (v) => setState(() => _activity = v),
-            onCalculate: _calculateTarget,
+      backgroundColor: tileColor,
+      appBar: ExpandingPageHeader(
+        child: AppBar(
+          backgroundColor: tileColor,
+          elevation: 0,
+          title: const Text(
+            'Profil Pengguna',
+            style: TextStyle(color: Colors.white),
           ),
-          const SizedBox(height: 12),
-          if (_target != null) MacroSummaryCard(target: _target!),
-          const SizedBox(height: 24),
-          Text(
-            'Acuan Nutrisi per Kelompok',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 10),
-          const AgeReferenceGrid(),
-        ],
+          iconTheme: const IconThemeData(color: Colors.white),
+        ),
+      ),
+      body: Container(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+          children: [
+            ProfileTargetForm(
+              ageController: _ageController,
+              weightController: _weightController,
+              heightController: _heightController,
+              gender: _gender,
+              activity: _activity,
+              onGenderChanged: (v) => setState(() => _gender = v),
+              onActivityChanged: (v) => setState(() => _activity = v),
+              onCalculate: _calculateTarget,
+            ),
+            const SizedBox(height: 12),
+            if (_target != null) MacroSummaryCard(target: _target!),
+            const SizedBox(height: 24),
+            Text(
+              'Acuan Nutrisi per Kelompok',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 10),
+            const AgeReferenceGrid(),
+          ],
+        ),
       ),
     );
   }

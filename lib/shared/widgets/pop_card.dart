@@ -36,9 +36,6 @@ class PopCard extends StatelessWidget {
 
     if (onTap == null) return content;
 
-    return AnimatedPressable(
-      onPressed: onTap,
-      child: content,
-    );
+    return AnimatedPressable(onPressed: onTap, child: content);
   }
 }

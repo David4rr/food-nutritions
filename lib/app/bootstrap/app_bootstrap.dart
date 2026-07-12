@@ -119,17 +119,11 @@ class AppBootstrap {
     HiveAesCipher? encryptionCipher,
   }) async {
     try {
-      return await Hive.openBox<T>(
-        boxName,
-        encryptionCipher: encryptionCipher,
-      );
+      return await Hive.openBox<T>(boxName, encryptionCipher: encryptionCipher);
     } on HiveError {
       // Jika box korup (misal: key berubah), hapus dan buat ulang
       await Hive.deleteBoxFromDisk(boxName);
-      return Hive.openBox<T>(
-        boxName,
-        encryptionCipher: encryptionCipher,
-      );
+      return Hive.openBox<T>(boxName, encryptionCipher: encryptionCipher);
     }
   }
 }

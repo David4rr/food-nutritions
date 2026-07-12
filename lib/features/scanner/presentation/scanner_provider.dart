@@ -28,8 +28,8 @@ class ScannerProvider extends ChangeNotifier {
   ScannerProvider({
     required ProductCacheRepository cacheRepository,
     required HistoryProvider historyProvider,
-  })  : _cacheRepository = cacheRepository,
-        _historyProvider = historyProvider;
+  }) : _cacheRepository = cacheRepository,
+       _historyProvider = historyProvider;
 
   final ProductCacheRepository _cacheRepository;
   final HistoryProvider _historyProvider;
@@ -55,7 +55,7 @@ class ScannerProvider extends ChangeNotifier {
     try {
       final service = OpenFoodFactsService(cacheRepository: _cacheRepository);
       final data = await service.fetchByBarcode(barcode);
-      
+
       // Pastikan tanggal scan selalu saat ini, meskipun data berasal dari cache (JSON lama)
       final scanData = data.copyWith(scannedAt: DateTime.now());
 
@@ -84,7 +84,9 @@ class ScannerProvider extends ChangeNotifier {
           ScanErrorType.timeout,
           'Koneksi terlalu lambat. Coba lagi beberapa saat.',
         );
-      } else if (msg.contains('socket') || msg.contains('network') || msg.contains('connection')) {
+      } else if (msg.contains('socket') ||
+          msg.contains('network') ||
+          msg.contains('connection')) {
         _error = const ScanError(
           ScanErrorType.network,
           'Koneksi bermasalah setelah beberapa percobaan.',
