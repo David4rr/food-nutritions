@@ -8,6 +8,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../shared/widgets/animated_pressable.dart';
 import '../../../shared/widgets/top_liquid_snackbar.dart';
+import '../../history/data/meal_entry.dart';
 import '../../history/presentation/history_provider.dart';
 import '../domain/product_view_data.dart';
 import 'product_quantity_helper.dart';
@@ -29,6 +30,19 @@ enum MealCategory {
     if (hour >= 11 && hour < 15) return MealCategory.lunch;
     if (hour >= 15 && hour < 18) return MealCategory.snack;
     return MealCategory.dinner;
+  }
+
+  MealTimeCategory toMealTimeCategory() {
+    switch (this) {
+      case MealCategory.breakfast:
+        return MealTimeCategory.breakfast;
+      case MealCategory.lunch:
+        return MealTimeCategory.lunch;
+      case MealCategory.dinner:
+        return MealTimeCategory.dinner;
+      case MealCategory.snack:
+        return MealTimeCategory.snack;
+    }
   }
 }
 
@@ -92,14 +106,23 @@ class _PortionSelectorSheetState extends State<PortionSelectorSheet> {
     HapticFeedback.mediumImpact();
     final now = DateTime.now();
 
-    await context.read<HistoryProvider>().logNutritionIntake(
-      date: now,
+    final entry = MealEntry(
+      id: '${widget.product.barcode}_${now.millisecondsSinceEpoch}',
+      barcode: widget.product.barcode,
+      name: widget.product.name,
+      imageUrl: widget.product.imageUrl,
+      category: _selectedCategory.toMealTimeCategory(),
+      portionAmount: _currentGrams,
+      portionUnit: _unit,
       calories: _calcCalories,
       protein: _calcProtein,
       fat: _calcFat,
       carbs: _calcCarbs,
       sugars: _calcSugars,
+      loggedAt: now,
     );
+
+    await context.read<HistoryProvider>().logMeal(entry);
 
     if (!mounted) return;
     Navigator.of(context).pop();
@@ -115,9 +138,10 @@ class _PortionSelectorSheetState extends State<PortionSelectorSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final palette = theme.extension<DashboardTilePalette>();
     final isPink = theme.extension<AppVisualMeta>()?.isPink ?? false;
-    final primaryColor = isPink ? const Color(0xFFE45BA5) : const Color(0xFF2FB8A4);
-    final gradientEnd = isPink ? const Color(0xFFC2185B) : const Color(0xFF1E8D7D);
+    final primaryColor = palette?.scan ?? theme.primaryColor;
+    final gradientEnd = isPink ? (palette?.total ?? const Color(0xFFE91E63)) : const Color(0xFF1E8D7D);
 
     final maxSlider = (_packageGrams != null && _packageGrams! > 200)
         ? _packageGrams!
@@ -200,10 +224,11 @@ class _PortionSelectorSheetState extends State<PortionSelectorSheet> {
                         children: [
                           Text(
                             'Catat Porsi Konsumsi',
-                            style: GoogleFonts.playfairDisplay(
-                              fontSize: 19,
-                              fontWeight: FontWeight.w700,
+                            style: GoogleFonts.dmSans(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
                               color: AppColors.textPrimary,
+                              letterSpacing: -0.2,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -255,19 +280,19 @@ class _PortionSelectorSheetState extends State<PortionSelectorSheet> {
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? cat.color.withValues(alpha: 0.12)
+                                  ? primaryColor.withValues(alpha: 0.12)
                                   : Colors.black.withValues(alpha: 0.03),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: isSelected ? cat.color : Colors.black.withValues(alpha: 0.05),
+                                color: isSelected ? primaryColor : Colors.black.withValues(alpha: 0.05),
                                 width: isSelected ? 1.8 : 1,
                               ),
                               boxShadow: isSelected
                                   ? [
                                       BoxShadow(
-                                        color: cat.color.withValues(alpha: 0.2),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 3),
+                                        color: primaryColor.withValues(alpha: 0.2),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
                                       ),
                                     ]
                                   : null,
@@ -278,7 +303,7 @@ class _PortionSelectorSheetState extends State<PortionSelectorSheet> {
                                 Icon(
                                   cat.icon,
                                   size: 20,
-                                  color: isSelected ? cat.color : Colors.grey.shade400,
+                                  color: isSelected ? primaryColor : Colors.grey.shade400,
                                 ),
                                 const SizedBox(height: 5),
                                 Text(
@@ -286,7 +311,7 @@ class _PortionSelectorSheetState extends State<PortionSelectorSheet> {
                                   style: GoogleFonts.dmSans(
                                     fontSize: 11,
                                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                    color: isSelected ? cat.color : AppColors.textSecondary,
+                                    color: isSelected ? primaryColor : AppColors.textSecondary,
                                   ),
                                 ),
                               ],
@@ -389,10 +414,11 @@ class _PortionSelectorSheetState extends State<PortionSelectorSheet> {
                                 children: [
                                   Text(
                                     _currentGrams.toStringAsFixed(0),
-                                    style: GoogleFonts.playfairDisplay(
-                                      fontWeight: FontWeight.w800,
+                                    style: GoogleFonts.dmSans(
+                                      fontWeight: FontWeight.w900,
                                       fontSize: 28,
                                       color: primaryColor,
+                                      letterSpacing: -0.5,
                                     ),
                                   ),
                                   const SizedBox(width: 4),
@@ -509,11 +535,11 @@ class _PortionSelectorSheetState extends State<PortionSelectorSheet> {
                             children: [
                               Text(
                                 _calcCalories.toStringAsFixed(0),
-                                style: GoogleFonts.playfairDisplay(
+                                style: GoogleFonts.dmSans(
                                   fontWeight: FontWeight.w900,
-                                  fontSize: 24,
+                                  fontSize: 26,
                                   color: primaryColor,
-                                  letterSpacing: -0.5,
+                                  letterSpacing: -0.8,
                                 ),
                               ),
                               const SizedBox(width: 4),
@@ -536,7 +562,7 @@ class _PortionSelectorSheetState extends State<PortionSelectorSheet> {
                             child: _MacroBento(
                               label: 'Protein',
                               value: '${_calcProtein.toStringAsFixed(1)}g',
-                              color: const Color(0xFF10B981),
+                              color: primaryColor,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -544,7 +570,7 @@ class _PortionSelectorSheetState extends State<PortionSelectorSheet> {
                             child: _MacroBento(
                               label: 'Karbo',
                               value: '${_calcCarbs.toStringAsFixed(1)}g',
-                              color: const Color(0xFFF59E0B),
+                              color: primaryColor,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -552,7 +578,7 @@ class _PortionSelectorSheetState extends State<PortionSelectorSheet> {
                             child: _MacroBento(
                               label: 'Lemak',
                               value: '${_calcFat.toStringAsFixed(1)}g',
-                              color: const Color(0xFFEF4444),
+                              color: primaryColor,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -560,7 +586,7 @@ class _PortionSelectorSheetState extends State<PortionSelectorSheet> {
                             child: _MacroBento(
                               label: 'Gula',
                               value: '${_calcSugars.toStringAsFixed(1)}g',
-                              color: const Color(0xFF8B5CF6),
+                              color: primaryColor,
                             ),
                           ),
                         ],

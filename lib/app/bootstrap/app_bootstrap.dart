@@ -7,6 +7,7 @@ import 'package:openfoodfacts/openfoodfacts.dart';
 
 import '../../features/history/data/daily_nutrition_analytics_repository.dart';
 import '../../features/history/data/history_repository.dart';
+import '../../features/history/data/meal_entry_repository.dart';
 import '../../features/history/data/product_history.dart';
 import '../../features/history/data/product_history_adapter.dart';
 import '../../features/history/data/weekly_stats_repository.dart';
@@ -19,12 +20,14 @@ class AppDependencies {
     required this.historyRepository,
     required this.weeklyStatsRepository,
     required this.dailyNutritionAnalyticsRepository,
+    required this.mealEntryRepository,
     required this.productCacheRepository,
   });
 
   final HistoryRepository historyRepository;
   final WeeklyStatsRepository weeklyStatsRepository;
   final DailyNutritionAnalyticsRepository dailyNutritionAnalyticsRepository;
+  final MealEntryRepository mealEntryRepository;
   final ProductCacheRepository productCacheRepository;
 }
 
@@ -64,6 +67,10 @@ class AppBootstrap {
       DailyNutritionAnalyticsRepository.boxName,
       encryptionCipher: cipher,
     );
+    final mealEntryBox = await _openBoxWithRecovery<dynamic>(
+      MealEntryRepository.boxName,
+      encryptionCipher: cipher,
+    );
 
     // [NOTE] weeklyStatsBox dan productCacheBox menyimpan data agregat / cache
     // non-sensitif, tidak perlu enkripsi wajib, tapi bisa ditambahkan.
@@ -88,6 +95,7 @@ class AppBootstrap {
       dailyNutritionAnalyticsRepository: DailyNutritionAnalyticsRepository(
         analyticsBox,
       ),
+      mealEntryRepository: MealEntryRepository(mealEntryBox),
       productCacheRepository: productCacheRepository,
     );
   }

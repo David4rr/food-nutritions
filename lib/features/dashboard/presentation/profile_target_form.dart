@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:cue/cue.dart';
-import '../../../shared/widgets/animated_pressable.dart';
 
 import '../../../app/theme/app_theme.dart';
 import '../domain/nutrition_target.dart';

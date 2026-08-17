@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_theme.dart';
 import '../../../shared/routes/expanding_route.dart';
-import '../../../shared/utils/navigator_extension.dart';
 import '../../../shared/widgets/animated_pressable.dart';
-import '../../news/news_page.dart';
+import '../../history/presentation/daily_meal_tracker_page.dart';
 
 class FoodGradeTile extends StatefulWidget {
   const FoodGradeTile({
@@ -57,9 +56,9 @@ class _FoodGradeTileState extends State<FoodGradeTile> {
       onPressed: () {
         context.expandTo(
           tileKey: _tileKey,
-          page: const NewsPage(),
+          page: const DailyMealTrackerPage(),
           tileColor: color,
-          tileRadius: BorderRadius.circular(16),
+          tileRadius: BorderRadius.circular(24),
         );
       },
       child: Container(
@@ -68,7 +67,7 @@ class _FoodGradeTileState extends State<FoodGradeTile> {
         height: widget.height,
         decoration: BoxDecoration(
           color: color,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
               color: color.withValues(alpha: 0.3),
@@ -95,21 +94,22 @@ class _FoodGradeTileState extends State<FoodGradeTile> {
             ),
             Positioned.fill(
               child: Padding(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Icon(
                       Icons.health_and_safety_rounded,
                       color: Colors.white,
-                      size: 24,
+                      size: 28,
                     ),
                     const Spacer(),
                     Text(
                       'Grade $grade',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
                     ),
                     const SizedBox(height: 4),

@@ -178,12 +178,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final visualMeta = Theme.of(context).extension<AppVisualMeta>();
-    final isPink = visualMeta?.isPink ?? false;
-    final tileColor = isPink
-        ? const Color(0xFFF48FB1)
-        : const Color(0xFF90CAF9); // Soft theme colors
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: CustomScrollView(

@@ -73,7 +73,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     final item = _item;
     final isPink =
         Theme.of(context).extension<AppVisualMeta>()?.isPink ?? false;
-    final primary = Theme.of(context).primaryColor;
+    final palette = Theme.of(context).extension<DashboardTilePalette>();
+    final primary = palette?.scan ?? Theme.of(context).primaryColor;
+    final secondary = isPink
+        ? (palette?.total ?? const Color(0xFFE91E63))
+        : const Color(0xFF1C9987);
+
     final servingLabel = item.servingSize?.trim();
     final quantityLabel = item.quantity?.trim();
     final packageLabel = (servingLabel != null && servingLabel.isNotEmpty)
@@ -81,22 +86,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         : quantityLabel;
     final packageAmountGrams = parseEstimatedGrams(packageLabel);
 
-    // Luminous Fresh Theme Palette (matching AppColors and theme)
-    final fabBgGradient = isPink
-        ? const LinearGradient(
-            colors: [Color(0xFFF06292), Color(0xFFE91E63)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          )
-        : const LinearGradient(
-            colors: [Color(0xFF2FB8A4), Color(0xFF1C9987)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          );
+    final fabBgGradient = LinearGradient(
+      colors: [primary, secondary],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
 
-    final fabGlowColor = isPink
-        ? const Color(0xFFE91E63).withValues(alpha: 0.38)
-        : const Color(0xFF2FB8A4).withValues(alpha: 0.40);
+    final fabGlowColor = primary.withValues(alpha: 0.38);
 
     return Scaffold(
       backgroundColor: isPink

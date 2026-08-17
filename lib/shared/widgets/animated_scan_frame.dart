@@ -1,13 +1,13 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 
-import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_theme.dart';
 
 class AnimatedScanFrame extends StatefulWidget {
-  const AnimatedScanFrame({super.key, this.size = 250});
+  const AnimatedScanFrame({super.key, this.size = 250, this.color});
 
   final double size;
+  final Color? color;
 
   @override
   State<AnimatedScanFrame> createState() => _AnimatedScanFrameState();
@@ -37,6 +37,9 @@ class _AnimatedScanFrameState extends State<AnimatedScanFrame> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = Theme.of(context).extension<DashboardTilePalette>();
+    final accentColor = widget.color ?? palette?.scan ?? Theme.of(context).primaryColor;
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 600),
       curve: Curves.easeInOut,
@@ -46,7 +49,7 @@ class _AnimatedScanFrameState extends State<AnimatedScanFrame> {
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
           width: _active ? 3 : 1.5,
-          color: _active ? AppColors.accentStrong : AppColors.border,
+          color: _active ? accentColor : Colors.white.withValues(alpha: 0.35),
         ),
       ),
       child: Stack(
@@ -61,8 +64,15 @@ class _AnimatedScanFrameState extends State<AnimatedScanFrame> {
               margin: const EdgeInsets.symmetric(horizontal: 10),
               height: 3,
               decoration: BoxDecoration(
-                color: AppColors.accentStrong,
+                color: accentColor,
                 borderRadius: BorderRadius.circular(4),
+                boxShadow: [
+                  BoxShadow(
+                    color: accentColor.withValues(alpha: 0.5),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                  ),
+                ],
               ),
             ),
           ),

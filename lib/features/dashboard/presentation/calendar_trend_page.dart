@@ -95,8 +95,6 @@ class _CalendarTrendPageState extends State<CalendarTrendPage> {
       emptyStartBlocks: emptyStartBlocks,
     );
 
-    const tileColor = Color(0xFF9B8AFB); // palette.total
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(

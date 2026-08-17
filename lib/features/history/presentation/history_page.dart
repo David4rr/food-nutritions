@@ -108,10 +108,6 @@ class _HistoryPageState extends State<HistoryPage>
     final isPink =
         Theme.of(context).extension<AppVisualMeta>()?.isPink ?? false;
 
-    final tileColor = isPink
-        ? const Color(0xFFFFCC80)
-        : const Color(0xFFFFCC80); // Soft orange theme
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: CustomScrollView(

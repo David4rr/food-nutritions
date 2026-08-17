@@ -55,6 +55,7 @@ class _BootstrapGateState extends State<_BootstrapGate> {
           weeklyStatsRepository: dependencies.weeklyStatsRepository,
           dailyNutritionAnalyticsRepository:
               dependencies.dailyNutritionAnalyticsRepository,
+          mealEntryRepository: dependencies.mealEntryRepository,
           productCacheRepository: dependencies.productCacheRepository,
         );
       },

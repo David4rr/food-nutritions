@@ -4,6 +4,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_theme.dart';
 import '../../../shared/widgets/animated_scan_frame.dart';
 import '../../../shared/widgets/top_liquid_snackbar.dart';
 import '../../history/presentation/history_provider.dart';
@@ -105,6 +106,9 @@ class _ScannerPageState extends State<ScannerPage> {
     ); // Jeda minimal untuk stabilitas engine
     if (!mounted) return;
 
+    final palette = Theme.of(context).extension<DashboardTilePalette>();
+    final scanColor = palette?.scan ?? Theme.of(context).primaryColor;
+
     String inputText = '';
     final barcode = await showModalBottomSheet<String>(
       context: context,
@@ -160,9 +164,9 @@ class _ScannerPageState extends State<ScannerPage> {
                       color: AppColors.textSecondary.withValues(alpha: 0.5),
                       letterSpacing: 1.0,
                     ),
-                    prefixIcon: const Icon(
+                    prefixIcon: Icon(
                       Icons.qr_code_scanner_rounded,
-                      color: AppColors.accentStrong,
+                      color: scanColor,
                     ),
                     filled: true,
                     fillColor: AppColors.background,
@@ -172,8 +176,8 @@ class _ScannerPageState extends State<ScannerPage> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(
-                        color: AppColors.accentStrong,
+                      borderSide: BorderSide(
+                        color: scanColor,
                         width: 2,
                       ),
                     ),
@@ -189,7 +193,7 @@ class _ScannerPageState extends State<ScannerPage> {
                   width: double.infinity,
                   child: FilledButton(
                     style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.accentStrong,
+                      backgroundColor: scanColor,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -226,6 +230,9 @@ class _ScannerPageState extends State<ScannerPage> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = Theme.of(context).extension<DashboardTilePalette>();
+    final scanColor = palette?.scan ?? Theme.of(context).primaryColor;
+
     // [NEW] ListenableBuilder → rebuild hanya bagian UI yang bergantung state
     return ListenableBuilder(
       listenable: _scannerProvider,
@@ -233,7 +240,7 @@ class _ScannerPageState extends State<ScannerPage> {
         final isLoading = _scannerProvider.isLoading;
 
         return Scaffold(
-          backgroundColor: const Color(0xFF2FB8A4), // palette.scan
+          backgroundColor: scanColor,
           resizeToAvoidBottomInset: false,
           extendBodyBehindAppBar: true, // [NEW] Immersive AppBar
           appBar: ExpandingPageHeader(
@@ -262,7 +269,7 @@ class _ScannerPageState extends State<ScannerPage> {
               Container(
                 color: Colors.black.withValues(alpha: 0.24),
                 alignment: Alignment.center,
-                child: const AnimatedScanFrame(),
+                child: AnimatedScanFrame(color: scanColor),
               ),
 
               // [NEW] Loading Overlay penuh saat API sedang diproses
@@ -273,11 +280,11 @@ class _ScannerPageState extends State<ScannerPage> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const SizedBox(
+                      SizedBox(
                         width: 64,
                         height: 64,
                         child: CircularProgressIndicator(
-                          color: AppColors.accent,
+                          color: scanColor,
                           strokeWidth: 4,
                         ),
                       ),

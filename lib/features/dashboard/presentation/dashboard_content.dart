@@ -142,7 +142,7 @@ class _DashboardContentState extends State<DashboardContent> {
                         height: baseHeight,
                         icon: Icons.history_rounded,
                         title: 'Riwayat',
-                        subtitle: '${todayItems.length} scan',
+                        subtitle: '${widget.allItems.length} scan tersimpan',
                         color: palette.history,
                         onTap: () => context.expandTo(
                           tileKey: _historyTileKey,
