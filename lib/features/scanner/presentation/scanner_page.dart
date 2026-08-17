@@ -89,6 +89,7 @@ class _ScannerPageState extends State<ScannerPage> {
   Future<void> _onDetect(BarcodeCapture capture) async {
     // Guard: abaikan jika sedang proses
     if (_isProcessing || _scannerProvider.status != ScanStatus.idle) return;
+
     final value = capture.barcodes.firstOrNull?.rawValue?.trim();
     if (value == null || value.isEmpty) return;
 
@@ -232,6 +233,13 @@ class _ScannerPageState extends State<ScannerPage> {
   Widget build(BuildContext context) {
     final palette = Theme.of(context).extension<DashboardTilePalette>();
     final scanColor = palette?.scan ?? Theme.of(context).primaryColor;
+    final screenSize = MediaQuery.of(context).size;
+    const frameSize = 260.0;
+    final scanWindow = Rect.fromCenter(
+      center: Offset(screenSize.width / 2, screenSize.height / 2),
+      width: frameSize,
+      height: frameSize,
+    );
 
     // [NEW] ListenableBuilder → rebuild hanya bagian UI yang bergantung state
     return ListenableBuilder(
@@ -263,13 +271,17 @@ class _ScannerPageState extends State<ScannerPage> {
             children: [
               MobileScanner(
                 controller: _controller,
+                scanWindow: scanWindow,
                 onDetect: isLoading ? null : _onDetect,
               ),
               // [FIX] Dark overlay dengan scan frame di tengah
               Container(
                 color: Colors.black.withValues(alpha: 0.24),
                 alignment: Alignment.center,
-                child: AnimatedScanFrame(color: scanColor),
+                child: AnimatedScanFrame(
+                  size: frameSize,
+                  color: scanColor,
+                ),
               ),
 
               // [NEW] Loading Overlay penuh saat API sedang diproses
