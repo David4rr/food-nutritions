@@ -1,4 +1,3 @@
-
 class ProductCache {
   ProductCache({
     required this.barcode,

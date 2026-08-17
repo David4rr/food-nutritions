@@ -232,22 +232,29 @@ class _DashboardContentState extends State<DashboardContent> {
                   ),
                 ),
                 SizedBox(width: spacing),
-                DashboardMetroTile(
-                  key: _totalTileKey,
-                  width: baseWidth,
-                  height: doubleHeight,
-                  icon: Icons.local_fire_department_outlined,
-                  title: '${todayCalories.toStringAsFixed(0)}\nkkal',
-                  subtitle: 'Total asupan scan',
-                  color: palette.total,
-                  large: true,
-                  onTap: () {
-                    context.expandTo(
-                      tileKey: _totalTileKey,
-                      page: CalendarTrendPage(
-                        targetCalories: target?.calories ?? 2000.0,
-                      ),
-                      tileColor: palette.total,
+                TweenAnimationBuilder<double>(
+                  tween: Tween<double>(begin: 0, end: todayCalories),
+                  duration: const Duration(milliseconds: 1200),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, val, child) {
+                    return DashboardMetroTile(
+                      key: _totalTileKey,
+                      width: baseWidth,
+                      height: doubleHeight,
+                      icon: Icons.local_fire_department_outlined,
+                      title: '${val.toStringAsFixed(0)}\nkkal',
+                      subtitle: 'Total asupan scan',
+                      color: palette.total,
+                      large: true,
+                      onTap: () {
+                        context.expandTo(
+                          tileKey: _totalTileKey,
+                          page: CalendarTrendPage(
+                            targetCalories: target?.calories ?? 2000.0,
+                          ),
+                          tileColor: palette.total,
+                        );
+                      },
                     );
                   },
                 ),

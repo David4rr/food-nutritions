@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_theme.dart';
+import '../../../shared/routes/expanding_route.dart';
+import '../../../shared/utils/navigator_extension.dart';
 import '../../../shared/widgets/animated_pressable.dart';
+import '../../news/news_page.dart';
 
-class FoodGradeTile extends StatelessWidget {
+class FoodGradeTile extends StatefulWidget {
   const FoodGradeTile({
     super.key,
     required this.width,
@@ -18,6 +21,13 @@ class FoodGradeTile extends StatelessWidget {
   final double protein;
 
   @override
+  State<FoodGradeTile> createState() => _FoodGradeTileState();
+}
+
+class _FoodGradeTileState extends State<FoodGradeTile> {
+  final _tileKey = GlobalKey();
+
+  @override
   Widget build(BuildContext context) {
     final isPink =
         Theme.of(context).extension<AppVisualMeta>()?.isPink ?? false;
@@ -25,29 +35,37 @@ class FoodGradeTile extends StatelessWidget {
     Color color = isPink ? const Color(0xFFEC407A) : const Color(0xFFEDB021);
     String message = 'Cukup baik';
 
-    if (calories == 0 && protein == 0) {
+    if (widget.calories == 0 && widget.protein == 0) {
       grade = '-';
       color = isPink ? const Color(0xFFF8BBD0) : const Color(0xFF9E9E9E);
       message = 'Belum ada data';
-    } else if (protein > calories * 0.05) {
+    } else if (widget.protein > widget.calories * 0.05) {
       grade = 'A';
       color = isPink ? const Color(0xFFC2185B) : const Color(0xFF009688);
       message = 'Sangat baik!';
-    } else if (protein > calories * 0.03) {
+    } else if (widget.protein > widget.calories * 0.03) {
       grade = 'B';
       color = isPink ? const Color(0xFFD81B60) : const Color(0xFF8BC34A);
       message = 'Pilihan bagus';
-    } else if (calories > 2000) {
+    } else if (widget.calories > 2000) {
       grade = 'E';
       color = isPink ? const Color(0xFF880E4F) : const Color(0xFFE53935);
       message = 'Kurangi kalori';
     }
 
     return AnimatedPressable(
-      onPressed: () {},
+      onPressed: () {
+        context.expandTo(
+          tileKey: _tileKey,
+          page: const NewsPage(),
+          tileColor: color,
+          tileRadius: BorderRadius.circular(16),
+        );
+      },
       child: Container(
-        width: width,
-        height: height,
+        key: _tileKey,
+        width: widget.width,
+        height: widget.height,
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(16),

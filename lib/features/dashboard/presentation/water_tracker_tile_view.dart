@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/animated_count.dart';
 
 class WaterTrackerTileView extends StatelessWidget {
   const WaterTrackerTileView({
@@ -97,23 +98,36 @@ class WaterTrackerTileView extends StatelessWidget {
                       const Spacer(),
                       ScaleTransition(
                         scale: animation,
-                        child: Text(
-                          '$glasses gelas',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
+                        child: AnimatedCount(
+                          value: glasses.toDouble(),
+                          duration: const Duration(milliseconds: 500),
+                          builder: (context, val) {
+                            return Text(
+                              '${val.toInt()} gelas',
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            );
+                          },
                         ),
                       ),
                       const SizedBox(height: 2),
-                      Text(
-                        '$dailyMl / $targetMl ml',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.9),
-                        ),
+                      AnimatedCount(
+                        value: dailyMl.toDouble(),
+                        duration: const Duration(milliseconds: 500),
+                        builder: (context, val) {
+                          return Text(
+                            '${val.toInt()} / $targetMl ml',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Colors.white.withValues(alpha: 0.9),
+                                ),
+                          );
+                        },
                       ),
                       const SizedBox(height: 6),
                       ClipRRect(

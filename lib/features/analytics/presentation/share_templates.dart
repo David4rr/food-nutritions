@@ -3,6 +3,8 @@ import '../../../app/theme/app_theme.dart';
 import '../domain/analytics_engine.dart';
 import 'analytics_charts.dart';
 
+import 'dart:typed_data';
+
 enum ShareCardType { summary, trend, macro, radar }
 
 abstract class ShareCardTemplate extends StatelessWidget {
@@ -11,72 +13,90 @@ abstract class ShareCardTemplate extends StatelessWidget {
     required this.data,
     this.isTransparent = false,
     this.showWatermark = false,
+    this.cardColor = Colors.white,
+    this.bgImageBytes,
   });
 
   final AnalyticsData data;
   final bool isTransparent;
   final bool showWatermark;
+  final Color cardColor;
+  final Uint8List? bgImageBytes;
+
+  bool get useWhiteText => cardColor == Colors.black || cardColor == Colors.transparent || isTransparent;
 
   Widget buildCard(BuildContext context, {required Widget child}) {
-    final isPink =
-        Theme.of(context).extension<AppVisualMeta>()?.isPink ?? false;
-    final primaryColor = isPink
-        ? const Color(0xFFE45BA5)
-        : const Color(0xFF2FB8A4);
-
     // Apple Health style uses an off-white background
-    final bgColor = isTransparent
-        ? Colors.transparent
-        : const Color(0xFFF2F2F7);
+    final bgColor = isTransparent ? null : const Color(0xFFF2F2F7);
 
-    return Container(
-      width: 1080, // Native Instagram Story width
-      color: bgColor,
-      alignment: Alignment.center,
-      child: FittedBox(
-        fit: BoxFit.fitWidth,
+    return SizedBox(
+      width: 1080,
+      height: 1080,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(40),
         child: Container(
-          width: 600,
-          padding: EdgeInsets.all(isTransparent ? 16.0 : 32.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              child,
-              if (showWatermark) ...[
-                const SizedBox(height: 24),
-                Center(
-                  child: Text(
-                    '@FoodNutritions',
-                    style: TextStyle(
-                      color: isTransparent
-                          ? Colors.white
-                          : Colors.grey.shade500,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
+          color: bgColor,
+          alignment: Alignment.center,
+          padding: EdgeInsets.all(isTransparent ? 16.0 : 64.0),
+          child: child,
         ),
       ),
     );
   }
 
   Widget buildContainer({required Widget child}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: isTransparent ? Colors.transparent : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow:
-            null, // Forces NO shadow regardless of transparency mode (or keeps it clean)
+    return AspectRatio(
+      aspectRatio: 1.0,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(48),
+        decoration: isTransparent || cardColor == Colors.transparent
+            ? BoxDecoration(
+                image: bgImageBytes != null
+                    ? DecorationImage(
+                        image: MemoryImage(bgImageBytes!),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
+                borderRadius: BorderRadius.circular(40),
+              )
+            : BoxDecoration(
+                color: cardColor,
+                image: bgImageBytes != null
+                    ? DecorationImage(
+                        image: MemoryImage(bgImageBytes!),
+                        fit: BoxFit.cover,
+                        colorFilter: ColorFilter.mode(
+                          cardColor.withValues(alpha: 0.5), // Tint the image with card color if they want color + image
+                          BlendMode.darken,
+                        ),
+                      )
+                    : null,
+                borderRadius: BorderRadius.circular(40),
+                boxShadow: const [],
+              ),
+        child: Column(
+          children: [
+            Expanded(
+              child: SizedBox.expand(
+                child: child,
+              ),
+            ),
+            if (showWatermark) ...[
+              const SizedBox(height: 12),
+              Text(
+                '@FoodNutritions',
+                style: TextStyle(
+                  color: useWhiteText ? Colors.white70 : Colors.black54,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 24,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
-      child: child,
     );
   }
 }
@@ -88,6 +108,8 @@ class SummaryShareCard extends ShareCardTemplate {
     required super.data,
     super.isTransparent,
     super.showWatermark,
+    super.cardColor,
+    super.bgImageBytes,
   });
 
   @override
@@ -102,18 +124,18 @@ class SummaryShareCard extends ShareCardTemplate {
       context,
       child: buildContainer(
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Ringkasan Mingguan',
               style: TextStyle(
-                fontSize: 28,
+                fontSize: 48, // increased
                 fontWeight: FontWeight.bold,
                 letterSpacing: -0.5,
-                color: isTransparent ? Colors.white : Colors.black87,
+                color: useWhiteText ? Colors.white : Colors.black87,
               ),
             ),
-            const SizedBox(height: 24),
             Row(
               children: [
                 Expanded(
@@ -138,15 +160,15 @@ class SummaryShareCard extends ShareCardTemplate {
                       ? Icons.arrow_upward_rounded
                       : Icons.arrow_downward_rounded,
                   color: primaryColor,
-                  size: 20,
+                  size: 32, // increased
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     '${data.calorieTrendPercent.abs().toStringAsFixed(1)}% vs minggu lalu',
                     style: TextStyle(
-                      fontSize: 16,
-                      color: isTransparent
+                      fontSize: 24, // increased
+                      color: useWhiteText
                           ? Colors.white
                           : Colors.grey.shade700,
                       fontWeight: FontWeight.w600,
@@ -168,18 +190,18 @@ class SummaryShareCard extends ShareCardTemplate {
         Text(
           label,
           style: TextStyle(
-            fontSize: 14,
-            color: isTransparent ? Colors.white : Colors.grey.shade600,
-            fontWeight: isTransparent ? FontWeight.w600 : FontWeight.normal,
+            fontSize: 20, // increased
+            color: useWhiteText ? Colors.white70 : Colors.grey.shade600,
+            fontWeight: useWhiteText ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           value,
           style: TextStyle(
-            fontSize: 24,
+            fontSize: 40, // increased
             fontWeight: FontWeight.bold,
-            color: isTransparent ? Colors.white : Colors.black87,
+            color: useWhiteText ? Colors.white : Colors.black87,
           ),
         ),
       ],
@@ -194,6 +216,8 @@ class TrendShareCard extends ShareCardTemplate {
     required super.data,
     super.isTransparent,
     super.showWatermark,
+    super.cardColor,
+    super.bgImageBytes,
   });
 
   @override
@@ -211,24 +235,25 @@ class TrendShareCard extends ShareCardTemplate {
       context,
       child: buildContainer(
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Asupan Energi',
               style: TextStyle(
-                fontSize: 28,
+                fontSize: 48, // increased
                 fontWeight: FontWeight.bold,
                 letterSpacing: -0.5,
-                color: isTransparent ? Colors.white : Colors.black87,
+                color: useWhiteText ? Colors.white : Colors.black87,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               'Kalori & Protein 7 Hari Terakhir',
               style: TextStyle(
-                fontSize: 16,
-                color: isTransparent ? Colors.white : Colors.grey.shade600,
-                fontWeight: isTransparent ? FontWeight.w600 : FontWeight.normal,
+                fontSize: 24, // increased
+                color: useWhiteText ? Colors.white : Colors.grey.shade600,
+                fontWeight: useWhiteText ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
             const SizedBox(height: 32),
@@ -239,6 +264,7 @@ class TrendShareCard extends ShareCardTemplate {
               targetProtein: data.targetProtein,
               primaryColor: primaryColor,
               secondaryColor: secondaryColor,
+              height: 480, // INCREASED HEIGHT FOR SQUARE!
             ),
           ],
         ),
@@ -254,6 +280,8 @@ class MacroShareCard extends ShareCardTemplate {
     required super.data,
     super.isTransparent,
     super.showWatermark,
+    super.cardColor,
+    super.bgImageBytes,
   });
 
   @override
@@ -275,15 +303,16 @@ class MacroShareCard extends ShareCardTemplate {
             Expanded(
               flex: 2,
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Distribusi Makro',
                     style: TextStyle(
-                      fontSize: 24,
+                      fontSize: 48, // increased
                       fontWeight: FontWeight.bold,
                       letterSpacing: -0.5,
-                      color: isTransparent ? Colors.white : Colors.black87,
+                      color: useWhiteText ? Colors.white : Colors.black87,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -329,26 +358,26 @@ class MacroShareCard extends ShareCardTemplate {
     return Row(
       children: [
         Container(
-          width: 12,
-          height: 12,
+          width: 24, // increased
+          height: 24, // increased
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 8),
         Text(
           label,
           style: TextStyle(
-            fontSize: 16,
-            color: isTransparent ? Colors.white : Colors.black87,
-            fontWeight: isTransparent ? FontWeight.w600 : FontWeight.normal,
+            fontSize: 24, // increased
+            color: useWhiteText ? Colors.white : Colors.black87,
+            fontWeight: useWhiteText ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
         const Spacer(),
         Text(
           value,
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 24, // increased
             fontWeight: FontWeight.bold,
-            color: isTransparent ? Colors.white : Colors.black87,
+            color: useWhiteText ? Colors.white : Colors.black87,
           ),
         ),
       ],
@@ -363,6 +392,8 @@ class RadarShareCard extends ShareCardTemplate {
     required super.data,
     super.isTransparent,
     super.showWatermark,
+    super.cardColor,
+    super.bgImageBytes,
   });
 
   @override
@@ -377,23 +408,24 @@ class RadarShareCard extends ShareCardTemplate {
       context,
       child: buildContainer(
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             Text(
               'Keseimbangan Nutrisi',
               style: TextStyle(
-                fontSize: 28,
+                fontSize: 48, // increased
                 fontWeight: FontWeight.bold,
                 letterSpacing: -0.5,
-                color: isTransparent ? Colors.white : Colors.black87,
+                color: useWhiteText ? Colors.white : Colors.black87,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               'Rasio Kualitas Asupan',
               style: TextStyle(
-                fontSize: 16,
-                color: isTransparent ? Colors.white : Colors.grey.shade600,
-                fontWeight: isTransparent ? FontWeight.w600 : FontWeight.normal,
+                fontSize: 24, // increased
+                color: useWhiteText ? Colors.white : Colors.grey.shade600,
+                fontWeight: useWhiteText ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
             const SizedBox(height: 32),
@@ -408,7 +440,8 @@ class RadarShareCard extends ShareCardTemplate {
                   0.5, // Sodium Placeholder
                 ],
                 primaryColor: primaryColor,
-                textColor: isTransparent ? Colors.white : Colors.black54,
+                textColor: useWhiteText ? Colors.white : Colors.black54,
+                size: 440, // Increased size for the 874x874 square!
               ),
             ),
           ],

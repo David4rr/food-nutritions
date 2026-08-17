@@ -45,7 +45,7 @@ class ScannerProvider extends ChangeNotifier {
 
   // Dipanggil sekali per barcode, guard dari double-scan ada di ScannerPage
   Future<void> processBarcode(String barcode) async {
-    if (_status == ScanStatus.loading) return;
+    if (_status != ScanStatus.idle) return;
 
     _status = ScanStatus.loading;
     _error = null;

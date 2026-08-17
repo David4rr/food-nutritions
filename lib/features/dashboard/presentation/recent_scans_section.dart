@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -6,7 +7,7 @@ import '../../../app/theme/app_theme.dart';
 import '../../../shared/widgets/animated_pressable.dart';
 import '../../../shared/widgets/pop_card.dart';
 import '../../../shared/widgets/staggered_animated_tile.dart';
-import '../../../shared/utils/navigator_extension.dart';
+import '../../../shared/routes/expanding_route.dart';
 import '../../history/data/product_history.dart';
 import '../../product/presentation/product_detail_page.dart';
 import '../../product/presentation/product_hero_tag.dart';
@@ -167,7 +168,7 @@ class _DayHeader extends StatelessWidget {
   }
 }
 
-class _HistoryTile extends StatelessWidget {
+class _HistoryTile extends StatefulWidget {
   const _HistoryTile({
     required this.item,
     this.onDelete,
@@ -182,9 +183,18 @@ class _HistoryTile extends StatelessWidget {
   final bool isPink;
 
   @override
+  State<_HistoryTile> createState() => _HistoryTileState();
+}
+
+class _HistoryTileState extends State<_HistoryTile> {
+  final _tileKey = GlobalKey();
+
+  @override
   Widget build(BuildContext context) {
-    final viewData = item.toViewData();
-    final bgColor = isPink ? const Color(0xFFD81B60) : const Color(0xFF009688);
+    final viewData = widget.item.toViewData();
+    final bgColor = widget.isPink
+        ? const Color(0xFFD81B60)
+        : const Color(0xFF009688);
     final tile = Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
@@ -202,7 +212,12 @@ class _HistoryTile extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: AnimatedPressable(
           onPressed: () {
-            context.pushRoute(ProductDetailPage(product: viewData));
+            context.expandTo(
+              tileKey: _tileKey,
+              page: ProductDetailPage(product: viewData),
+              tileColor: bgColor,
+              tileRadius: BorderRadius.circular(16),
+            );
           },
           child: Stack(
             children: [
@@ -223,12 +238,32 @@ class _HistoryTile extends StatelessWidget {
                       tag: productImageHeroTag(viewData),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(14),
-                        child: item.imageUrl.isNotEmpty
-                            ? Image.network(
-                                item.imageUrl,
+                        child: widget.item.imageUrl.isNotEmpty
+                            // ponytail: Use CachedNetworkImage to avoid re-downloading thumbnail on every rebuild
+                            ? CachedNetworkImage(
+                                imageUrl: widget.item.imageUrl,
                                 width: 62,
                                 height: 62,
                                 fit: BoxFit.cover,
+                                placeholder: (context, url) => Container(
+                                  width: 62,
+                                  height: 62,
+                                  color: Colors.white.withValues(alpha: 0.1),
+                                  child: const Center(
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) => Container(
+                                  width: 62,
+                                  height: 62,
+                                  color: Colors.white.withValues(alpha: 0.1),
+                                  child: const Icon(
+                                    Icons.broken_image,
+                                    color: Colors.white54,
+                                  ),
+                                ),
                               )
                             : Container(
                                 width: 62,
@@ -247,7 +282,7 @@ class _HistoryTile extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            item.name,
+                            widget.item.name,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
@@ -267,7 +302,7 @@ class _HistoryTile extends StatelessWidget {
                                 color: Colors.orange.shade300,
                               ),
                               Text(
-                                '${item.calories.toStringAsFixed(1)} kcal/100g',
+                                '${widget.item.calories.toStringAsFixed(1)} kcal/100g',
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.9),
                                   fontSize: 12,
@@ -283,7 +318,7 @@ class _HistoryTile extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        if (showDateBadge)
+                        if (widget.showDateBadge)
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
@@ -294,7 +329,9 @@ class _HistoryTile extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              DateFormat('dd/MM HH:mm').format(item.scanDate),
+                              DateFormat(
+                                'dd/MM HH:mm',
+                              ).format(widget.item.scanDate),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w700,
@@ -302,13 +339,13 @@ class _HistoryTile extends StatelessWidget {
                               ),
                             ),
                           ),
-                        if (onDelete != null) ...[
+                        if (widget.onDelete != null) ...[
                           const SizedBox(height: 8),
                           Material(
                             color: Colors.transparent,
                             child: InkWell(
                               borderRadius: BorderRadius.circular(999),
-                              onTap: () => onDelete!(item),
+                              onTap: () => widget.onDelete!(widget.item),
                               child: Container(
                                 padding: const EdgeInsets.all(6),
                                 decoration: BoxDecoration(
@@ -335,26 +372,30 @@ class _HistoryTile extends StatelessWidget {
       ),
     );
 
-    if (!enableDragDelete) return tile;
+    if (!widget.enableDragDelete) {
+      return KeyedSubtree(key: _tileKey, child: tile);
+    }
 
-    return LongPressDraggable<ProductHistory>(
-      data: item,
-      // [FIX] Mengkalkulasi titik tengah dari constrained box (lebar 220) agar persis di tengah jari
-      dragAnchorStrategy: (draggable, context, position) {
-        final renderBox = context.findRenderObject() as RenderBox?;
-        final height = renderBox?.size.height ?? 90.0;
-        return Offset(220 / 2, height / 2);
-      },
-      onDragStarted: () => HapticFeedback.heavyImpact(),
-      feedback: Material(
-        color: Colors.transparent,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 220),
-          child: Opacity(opacity: 0.9, child: tile),
+    return KeyedSubtree(
+      key: _tileKey,
+      child: LongPressDraggable<ProductHistory>(
+        data: widget.item,
+        dragAnchorStrategy: (draggable, context, position) {
+          final renderBox = context.findRenderObject() as RenderBox?;
+          final height = renderBox?.size.height ?? 90.0;
+          return Offset(220 / 2, height / 2);
+        },
+        onDragStarted: () => HapticFeedback.heavyImpact(),
+        feedback: Material(
+          color: Colors.transparent,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 220),
+            child: Opacity(opacity: 0.9, child: tile),
+          ),
         ),
+        childWhenDragging: Opacity(opacity: 0.35, child: tile),
+        child: tile,
       ),
-      childWhenDragging: Opacity(opacity: 0.35, child: tile),
-      child: tile,
     );
   }
 }

@@ -23,6 +23,7 @@ class _ScannerPageState extends State<ScannerPage> {
   late final MobileScannerController _controller;
   // [NEW] Provider dibuat di level widget agar lifecycle sejalan dengan kamera
   late final ScannerProvider _scannerProvider;
+  bool _isProcessing = false;
 
   @override
   void initState() {
@@ -69,6 +70,8 @@ class _ScannerPageState extends State<ScannerPage> {
         ),
       );
     } else if (status == ScanStatus.error) {
+      _isProcessing = false;
+      _controller.start();
       final err = _scannerProvider.error!;
       TopLiquidSnackBar.show(
         context,
@@ -84,11 +87,12 @@ class _ScannerPageState extends State<ScannerPage> {
 
   Future<void> _onDetect(BarcodeCapture capture) async {
     // Guard: abaikan jika sedang proses
-    if (_scannerProvider.isLoading) return;
+    if (_isProcessing || _scannerProvider.status != ScanStatus.idle) return;
     final value = capture.barcodes.firstOrNull?.rawValue?.trim();
     if (value == null || value.isEmpty) return;
 
-    // Delegasikan ke provider
+    _isProcessing = true;
+    await _controller.stop();
     await _scannerProvider.processBarcode(value);
   }
 
@@ -99,6 +103,7 @@ class _ScannerPageState extends State<ScannerPage> {
     await Future.delayed(
       const Duration(milliseconds: 50),
     ); // Jeda minimal untuk stabilitas engine
+    if (!mounted) return;
 
     String inputText = '';
     final barcode = await showModalBottomSheet<String>(
@@ -209,13 +214,13 @@ class _ScannerPageState extends State<ScannerPage> {
       },
     );
 
-    if (!mounted) return;
+    if (barcode == null || barcode.isEmpty) {
+      _isProcessing = false;
+      _controller.start();
+      return;
+    }
 
-    // [FIX] Segera nyalakan ulang kamera setelah dialog tertutup
-    _controller.start();
-
-    if (barcode == null || barcode.isEmpty) return;
-
+    _isProcessing = true;
     await _scannerProvider.processBarcode(barcode);
   }
 

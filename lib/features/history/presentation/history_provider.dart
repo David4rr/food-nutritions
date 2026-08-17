@@ -39,21 +39,44 @@ class HistoryProvider extends ChangeNotifier {
   }
 
   Future<void> addScan(ProductViewData data) async {
+    if (_items.isNotEmpty &&
+        _items.first.barcode == data.barcode &&
+        DateTime.now().difference(_items.first.scanDate).inSeconds < 2) {
+      return;
+    }
     final item = ProductHistory.fromViewData(data);
     await _repository.add(item);
-    if (_isToday(item.scanDate)) {
-      final itemCalories = item.estimatedCaloriesPerProduct ?? item.calories;
-      await _weeklyStatsRepository.addCaloriesForDate(
-        item.scanDate,
-        itemCalories,
-      );
-      await _dailyAnalyticsRepository.addEntry(
-        date: item.scanDate,
-        calories: itemCalories,
-        protein: item.estimatedProteinPerProduct ?? item.protein,
-      );
-    }
     _items.insert(0, item);
+    notifyListeners();
+  }
+
+  Future<void> logNutritionIntake({
+    required DateTime date,
+    required double calories,
+    required double protein,
+  }) async {
+    await _weeklyStatsRepository.addCaloriesForDate(date, calories);
+    await _dailyAnalyticsRepository.addEntry(
+      date: date,
+      calories: calories,
+      protein: protein,
+    );
+    _weeklyCalories = _loadLast7DaysCalories();
+    _dailyAnalytics = _loadLast7DaysAnalytics();
+    notifyListeners();
+  }
+
+  Future<void> removeNutritionIntake({
+    required DateTime date,
+    required double calories,
+    required double protein,
+  }) async {
+    await _weeklyStatsRepository.subtractCaloriesForDate(date, calories);
+    await _dailyAnalyticsRepository.removeEntry(
+      date: date,
+      calories: calories,
+      protein: protein,
+    );
     _weeklyCalories = _loadLast7DaysCalories();
     _dailyAnalytics = _loadLast7DaysAnalytics();
     notifyListeners();
@@ -61,25 +84,12 @@ class HistoryProvider extends ChangeNotifier {
 
   Future<void> removeItem(ProductHistory item) async {
     await _repository.remove(item);
-    if (_isToday(item.scanDate)) {
-      final itemCalories = item.estimatedCaloriesPerProduct ?? item.calories;
-      await _weeklyStatsRepository.subtractCaloriesForDate(
-        item.scanDate,
-        itemCalories,
-      );
-      await _dailyAnalyticsRepository.removeEntry(
-        date: item.scanDate,
-        calories: itemCalories,
-        protein: item.estimatedProteinPerProduct ?? item.protein,
-      );
-    }
     _items.removeWhere(
       (e) =>
           e.barcode == item.barcode &&
-          e.scanDate.toIso8601String() == item.scanDate.toIso8601String(),
+          e.scanDate.millisecondsSinceEpoch ==
+              item.scanDate.millisecondsSinceEpoch,
     );
-    _weeklyCalories = _loadLast7DaysCalories();
-    _dailyAnalytics = _loadLast7DaysAnalytics();
     notifyListeners();
   }
 
@@ -104,12 +114,5 @@ class HistoryProvider extends ChangeNotifier {
   List<DateTime> _last7Days() {
     final now = DateTime.now();
     return List.generate(7, (i) => now.subtract(Duration(days: 6 - i)));
-  }
-
-  bool _isToday(DateTime date) {
-    final now = DateTime.now();
-    return now.year == date.year &&
-        now.month == date.month &&
-        now.day == date.day;
   }
 }

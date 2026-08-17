@@ -15,6 +15,7 @@ class AnimatedDualTrendChart extends StatelessWidget {
     required this.targetProtein,
     required this.primaryColor,
     required this.secondaryColor,
+    this.height = 220,
   });
 
   final List<double> calories;
@@ -23,6 +24,7 @@ class AnimatedDualTrendChart extends StatelessWidget {
   final double targetProtein;
   final Color primaryColor;
   final Color secondaryColor;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +34,7 @@ class AnimatedDualTrendChart extends StatelessWidget {
       tween: Tween(begin: 0.0, end: 1.0),
       builder: (context, value, child) {
         return CustomPaint(
-          size: const Size(double.infinity, 220),
+          size: Size(double.infinity, height),
           painter: _ModernDualTrendPainter(
             calories: calories,
             protein: protein,
@@ -147,13 +149,12 @@ class _ModernDualTrendPainter extends CustomPainter {
       }
     }
 
-    // Glow effect
+    // Glow effect (blur dihilangkan untuk optimasi memory dan bug transparency)
     final glowPaint = Paint()
       ..color = secondaryColor.withValues(alpha: 0.4)
       ..strokeWidth = 6
       ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke
-      ..imageFilter = ImageFilter.blur(sigmaX: 4, sigmaY: 4);
+      ..style = PaintingStyle.stroke;
     canvas.drawPath(path, glowPaint);
 
     // Solid line
@@ -320,13 +321,12 @@ class _ConcentricRingsPainter extends CustomPainter {
         ..strokeCap = StrokeCap.round
         ..strokeWidth = strokeWidth;
 
-      // Fake shadow/glow at the cap
+      // Fake shadow/glow at the cap (blur dihilangkan)
       final glowPaint = Paint()
         ..color = baseColor.withValues(alpha: 0.5)
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round
-        ..strokeWidth = strokeWidth + 4
-        ..imageFilter = ImageFilter.blur(sigmaX: 4, sigmaY: 4);
+        ..strokeWidth = strokeWidth + 4;
 
       canvas.drawArc(rect, startAngle, sweepAngle, false, glowPaint);
       canvas.drawArc(rect, startAngle, sweepAngle, false, foregroundPaint);
@@ -353,11 +353,13 @@ class AnimatedNutrientRadar extends StatelessWidget {
     required this.values,
     required this.primaryColor,
     this.textColor = Colors.black54,
+    this.size = 180,
   });
 
   final List<double> values;
   final Color primaryColor;
   final Color textColor;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
@@ -367,7 +369,7 @@ class AnimatedNutrientRadar extends StatelessWidget {
       tween: Tween(begin: 0.0, end: 1.0),
       builder: (context, value, child) {
         return CustomPaint(
-          size: const Size(180, 180),
+          size: Size(size, size),
           painter: _ModernRadarPainter(
             values: values,
             primaryColor: primaryColor,

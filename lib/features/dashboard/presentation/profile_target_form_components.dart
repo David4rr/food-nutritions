@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/animated_pressable.dart';
 
 class ProfileTargetHeader extends StatelessWidget {
   const ProfileTargetHeader({super.key, required this.primary});
@@ -62,25 +63,27 @@ class ProfileTargetSaveButton extends StatelessWidget {
 
   final Color primary;
   final VoidCallback onCalculate;
-
-  @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 46,
-      child: FilledButton(
-        style: FilledButton.styleFrom(
-          backgroundColor: Colors.white,
-          foregroundColor: primary,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
+    return AnimatedPressable(
+      onPressed: onCalculate,
+      child: SizedBox(
+        width: double.infinity,
+        height: 46,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: Colors.white,
             borderRadius: BorderRadius.circular(14),
           ),
-        ),
-        onPressed: onCalculate,
-        child: const Text(
-          'Simpan Target',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          child: Center(
+            child: Text(
+              'Simpan Target',
+              style: TextStyle(
+                color: primary,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+          ),
         ),
       ),
     );

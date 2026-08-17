@@ -1,4 +1,7 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:cue/cue.dart';
+import '../../../shared/widgets/animated_pressable.dart';
 
 import '../../../app/theme/app_theme.dart';
 import '../domain/nutrition_target.dart';
@@ -116,6 +119,7 @@ class ProfileTargetForm extends StatelessWidget {
                       );
                     }
                     return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(child: _genderDrop(primary)),
                         const SizedBox(width: 10),
@@ -137,57 +141,257 @@ class ProfileTargetForm extends StatelessWidget {
     );
   }
 
-  Widget _genderDrop(Color primary) => DropdownButtonFormField<Gender>(
-    initialValue: gender,
-    dropdownColor: primary,
-    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-    decoration: _decor('Jenis Kelamin'),
-    items: const [
+  Widget _genderDrop(Color primary) {
+    return _SmoothDrop<Gender>('Jenis Kelamin', gender, const [
       DropdownMenuItem(value: Gender.male, child: Text('Pria')),
       DropdownMenuItem(value: Gender.female, child: Text('Wanita')),
-    ],
-    onChanged: (v) {
-      if (v != null) onGenderChanged(v);
-    },
-  );
+    ], onGenderChanged);
+  }
 
-  Widget _activityDrop(Color primary) => DropdownButtonFormField<ActivityLevel>(
-    initialValue: activity,
-    dropdownColor: primary,
-    isExpanded: true,
-    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-    decoration: _decor('Aktivitas'),
-    items: ActivityLevel.values
-        .map((e) => DropdownMenuItem(value: e, child: Text(e.label)))
-        .toList(),
-    onChanged: (v) {
-      if (v != null) onActivityChanged(v);
-    },
-  );
+  Widget _activityDrop(Color primary) {
+    return _SmoothDrop<ActivityLevel>(
+      'Aktivitas',
+      activity,
+      ActivityLevel.values
+          .map((e) => DropdownMenuItem(value: e, child: Text(e.label)))
+          .toList(),
+      onActivityChanged,
+    );
+  }
 
   Widget _input(TextEditingController ctrl, String lbl) => TextField(
     controller: ctrl,
     keyboardType: TextInputType.number,
-    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-    decoration: _decor(lbl),
+    style: const TextStyle(
+      color: Colors.white,
+      fontWeight: FontWeight.bold,
+      fontSize: 16,
+    ),
+    decoration: InputDecoration(
+      labelText: lbl,
+      labelStyle: TextStyle(
+        color: Colors.white.withValues(alpha: 0.8),
+        fontSize: 14,
+      ),
+      filled: true,
+      fillColor: Colors.white.withValues(alpha: 0.1),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: Colors.white),
+      ),
+    ),
   );
+}
 
-  InputDecoration _decor(String lbl) => InputDecoration(
-    labelText: lbl,
-    labelStyle: TextStyle(
-      color: Colors.white.withValues(alpha: 0.8),
-      fontSize: 14,
-    ),
-    filled: true,
-    fillColor: Colors.white.withValues(alpha: 0.1),
-    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
-      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: Colors.white),
-    ),
-  );
+// ponytail: smooth floating dropdown (no shaders, 60fps)
+class _SmoothDrop<T> extends StatelessWidget {
+  final String label;
+  final T value;
+  final List<DropdownMenuItem<T>> items;
+  final ValueChanged<T> onChanged;
+
+  const _SmoothDrop(this.label, this.value, this.items, this.onChanged);
+
+  @override
+  Widget build(BuildContext context) {
+    final selectedItem = items.firstWhere(
+      (e) => e.value == value,
+      orElse: () => items.first,
+    );
+
+    // Normal trigger on the page (Glassmorphism to match text inputs)
+    final trigger = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                DefaultTextStyle(
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                  child: selectedItem.child,
+                ),
+              ],
+            ),
+          ),
+          const Icon(
+            Icons.expand_more_rounded,
+            color: Colors.white70,
+            size: 22,
+          ),
+        ],
+      ),
+    );
+
+    return CueModalTransition(
+      motion: const CueMotion.snappy(),
+      reverseMotion: const CueMotion.snappy(),
+      hideTriggerOnTransition: true,
+      triggerBuilder: (context, open) =>
+          GestureDetector(onTap: open, child: trigger),
+      builder: (context, rect) {
+        return Stack(
+          children: [
+            Positioned(
+              left: rect.left,
+              top: rect.top,
+              width: rect.width,
+              child: Material(
+                color: Colors.transparent,
+                child: Actor(
+                  // Animate the entire dropdown card expanding from the trigger's top position
+                  acts: [
+                    const Act.scale(from: 0.8, alignment: Alignment.topCenter),
+                    const Act.fadeIn(),
+                  ],
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.3),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // The anchor part (looks exactly like the trigger)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          label,
+                                          style: TextStyle(
+                                            color: Colors.white.withValues(
+                                              alpha: 0.8,
+                                            ),
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        DefaultTextStyle(
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                          child: selectedItem.child,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Actor(
+                                    acts: [Act.rotate(from: 0, to: 3.1415)],
+                                    child: Icon(
+                                      Icons.expand_less_rounded,
+                                      color: Colors.white70,
+                                      size: 22,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // The dropdown items
+                            ...items.map((item) {
+                              final isSelected = item.value == value;
+                              return InkWell(
+                                onTap: () {
+                                  onChanged(item.value as T);
+                                  Navigator.pop(context);
+                                },
+                                child: Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 14,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: DefaultTextStyle(
+                                          style: TextStyle(
+                                            color: isSelected
+                                                ? Colors.white
+                                                : Colors.white.withValues(
+                                                    alpha: 0.8,
+                                                  ),
+                                            fontWeight: isSelected
+                                                ? FontWeight.bold
+                                                : FontWeight.w500,
+                                            fontSize: 15,
+                                          ),
+                                          child: item.child,
+                                        ),
+                                      ),
+                                      if (isSelected)
+                                        const Icon(
+                                          Icons.check_circle_rounded,
+                                          color: Colors.white,
+                                          size: 18,
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }

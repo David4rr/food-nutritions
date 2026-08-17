@@ -19,25 +19,17 @@ class _SpringPageRoute<T> extends PageRouteBuilder<T> {
         transitionDuration: const Duration(milliseconds: 350),
         reverseTransitionDuration: const Duration(milliseconds: 350),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          final slideAnimation =
-              Tween<Offset>(
-                begin: const Offset(0.20, 0),
-                end: Offset.zero,
-              ).animate(
-                CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.fastEaseInToSlowEaseOut,
-                  reverseCurve: Curves.fastOutSlowIn,
-                ),
-              );
-
-          final fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-            CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+          final curved = CurvedAnimation(
+            parent: animation,
+            curve: Curves.fastEaseInToSlowEaseOut,
+            reverseCurve: Curves.fastOutSlowIn,
           );
-
-          return SlideTransition(
-            position: slideAnimation,
-            child: FadeTransition(opacity: fadeAnimation, child: child),
+          return FadeTransition(
+            opacity: curved,
+            child: ScaleTransition(
+              scale: Tween<double>(begin: 0.88, end: 1.0).animate(curved),
+              child: child,
+            ),
           );
         },
       );

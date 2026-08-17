@@ -3,6 +3,9 @@ import '../domain/analytics_engine.dart';
 import 'share_templates.dart';
 import 'analytics_share_service.dart';
 
+import 'package:image_picker/image_picker.dart';
+import 'dart:typed_data';
+
 class ShareSheet extends StatefulWidget {
   const ShareSheet({super.key, required this.data});
   final AnalyticsData data;
@@ -14,38 +17,20 @@ class ShareSheet extends StatefulWidget {
 class _ShareSheetState extends State<ShareSheet> {
   final AnalyticsShareService _shareService = AnalyticsShareService();
   final PageController _pageController = PageController(viewportFraction: 0.85);
+  final ImagePicker _picker = ImagePicker();
 
   bool _isProcessing = false;
-  bool _isTransparent = false;
+  bool _isBgTransparent = false;
+  Color _cardColor = Colors.white;
+  Uint8List? _bgImageBytes;
   int _currentIndex = 0;
-
-  Widget _buildSelectedCard() {
-    switch (_currentIndex) {
-      case 0:
-        return SummaryShareCard(
-          data: widget.data,
-          isTransparent: _isTransparent,
-        );
-      case 1:
-        return TrendShareCard(data: widget.data, isTransparent: _isTransparent);
-      case 2:
-        return MacroShareCard(data: widget.data, isTransparent: _isTransparent);
-      case 3:
-        return RadarShareCard(data: widget.data, isTransparent: _isTransparent);
-      default:
-        return SummaryShareCard(
-          data: widget.data,
-          isTransparent: _isTransparent,
-        );
-    }
-  }
 
   Future<void> _handleShare() async {
     setState(() => _isProcessing = true);
     final bytes = await _shareService.capture();
     setState(() => _isProcessing = false);
     if (bytes != null && mounted) {
-      if (_isTransparent) {
+      if (_isBgTransparent) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -66,7 +51,7 @@ class _ShareSheetState extends State<ShareSheet> {
     setState(() => _isProcessing = false);
     if (bytes != null && mounted) {
       final success = await _shareService.saveToGallery(bytes);
-      if (_isTransparent) {
+      if (_isBgTransparent) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -92,10 +77,7 @@ class _ShareSheetState extends State<ShareSheet> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: _isTransparent
-            ? const Color(0xFF1C1C1E)
-            : Colors
-                  .white, // Dark background when transparent mode is active to show white text
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: const EdgeInsets.only(top: 24, bottom: 24),
@@ -111,7 +93,7 @@ class _ShareSheetState extends State<ShareSheet> {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: _isTransparent ? Colors.white : Colors.black87,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -135,28 +117,36 @@ class _ShareSheetState extends State<ShareSheet> {
                     case 0:
                       card = SummaryShareCard(
                         data: widget.data,
-                        isTransparent: _isTransparent,
+                        isTransparent: _isBgTransparent,
+                        cardColor: _cardColor,
+                        bgImageBytes: _bgImageBytes,
                         showWatermark: true,
                       );
                       break;
                     case 1:
                       card = TrendShareCard(
                         data: widget.data,
-                        isTransparent: _isTransparent,
+                        isTransparent: _isBgTransparent,
+                        cardColor: _cardColor,
+                        bgImageBytes: _bgImageBytes,
                         showWatermark: true,
                       );
                       break;
                     case 2:
                       card = MacroShareCard(
                         data: widget.data,
-                        isTransparent: _isTransparent,
+                        isTransparent: _isBgTransparent,
+                        cardColor: _cardColor,
+                        bgImageBytes: _bgImageBytes,
                         showWatermark: true,
                       );
                       break;
                     case 3:
                       card = RadarShareCard(
                         data: widget.data,
-                        isTransparent: _isTransparent,
+                        isTransparent: _isBgTransparent,
+                        cardColor: _cardColor,
+                        bgImageBytes: _bgImageBytes,
                         showWatermark: true,
                       );
                       break;
@@ -169,32 +159,32 @@ class _ShareSheetState extends State<ShareSheet> {
                     duration: const Duration(milliseconds: 300),
                     curve: Curves.easeOutCubic,
                     child: Center(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: _isTransparent
-                              ? Colors.transparent
-                              : Colors.grey.shade200,
-                          borderRadius: BorderRadius.circular(16),
-                          border: _isTransparent
-                              ? null
-                              : Border.all(color: Colors.grey.shade300),
-                        ),
-                        child: ClipRRect(
+                      child: AspectRatio(
+                        aspectRatio: 1.0,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: _isBgTransparent
+                                ? Colors.transparent
+                                : Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(16),
+                            border: _isBgTransparent
+                                ? null
+                                : Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: ClipRRect(
                           borderRadius: BorderRadius.circular(16),
                           child: Stack(
                             children: [
-                              if (_isTransparent)
-                                Positioned.fill(
-                                  child: CustomPaint(
-                                    painter: _CheckerboardPainter(),
-                                  ),
-                                ),
                               FittedBox(
                                 fit: BoxFit.contain,
-                                child: UnconstrainedBox(
-                                  child: isSelected
-                                      ? _shareService.wrap(card)
-                                      : card,
+                                child: SizedBox(
+                                  width: 1080,
+                                  height: 1080,
+                                  child: Center(
+                                    child: isSelected
+                                        ? _shareService.wrap(card)
+                                        : card,
+                                  ),
                                 ),
                               ),
                             ],
@@ -202,7 +192,8 @@ class _ShareSheetState extends State<ShareSheet> {
                         ),
                       ),
                     ),
-                  );
+                  ),
+                );
                 },
               ),
             ),
@@ -212,15 +203,64 @@ class _ShareSheetState extends State<ShareSheet> {
             // Toggle Transparent
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: SegmentedButton<bool>(
-                segments: const [
-                  ButtonSegment(value: false, label: Text('Dengan Latar')),
-                  ButtonSegment(value: true, label: Text('Transparan')),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text('Warna Kartu', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SegmentedButton<Color>(
+                          segments: const [
+                            ButtonSegment(value: Colors.white, label: Text('Putih')),
+                            ButtonSegment(value: Colors.black, label: Text('Hitam')),
+                            ButtonSegment(value: Colors.transparent, label: Text('Bening')),
+                          ],
+                          selected: {_cardColor},
+                          onSelectionChanged: (set) => setState(() {
+                             _cardColor = set.first;
+                             if (_cardColor != Colors.transparent) {
+                               // Optional: If they pick a solid color, do they want to keep the image?
+                               // Usually yes, we tint it. But if they specifically pick a color maybe keep it.
+                             }
+                          }),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton.filledTonal(
+                        icon: const Icon(Icons.image),
+                        onPressed: () async {
+                           final xfile = await _picker.pickImage(source: ImageSource.gallery);
+                           if (xfile != null) {
+                             final bytes = await xfile.readAsBytes();
+                             setState(() {
+                               _bgImageBytes = bytes;
+                             });
+                           }
+                        }
+                      ),
+                      if (_bgImageBytes != null)
+                        IconButton.filledTonal(
+                          icon: const Icon(Icons.delete),
+                          onPressed: () => setState(() => _bgImageBytes = null),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Latar Belakang', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  SegmentedButton<bool>(
+                    segments: const [
+                      ButtonSegment(value: false, label: Text('Bawaan')),
+                      ButtonSegment(value: true, label: Text('Transparan')),
+                    ],
+                    selected: {_isBgTransparent},
+                    onSelectionChanged: (set) => setState(() {
+                      _isBgTransparent = set.first;
+                    }),
+                  ),
                 ],
-                selected: {_isTransparent},
-                onSelectionChanged: (set) {
-                  setState(() => _isTransparent = set.first);
-                },
               ),
             ),
 
@@ -264,26 +304,4 @@ class _ShareSheetState extends State<ShareSheet> {
       ),
     );
   }
-}
-
-class _CheckerboardPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint1 = Paint()..color = const Color(0xFFE0E0E0);
-    final paint2 = Paint()..color = Colors.white;
-    const double squareSize = 20.0;
-    for (double y = 0; y < size.height; y += squareSize) {
-      for (double x = 0; x < size.width; x += squareSize) {
-        final isEven =
-            ((x / squareSize).floor() + (y / squareSize).floor()) % 2 == 0;
-        canvas.drawRect(
-          Rect.fromLTWH(x, y, squareSize, squareSize),
-          isEven ? paint1 : paint2,
-        );
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

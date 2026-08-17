@@ -49,4 +49,5 @@ DerivedData/
 # Secrets & Environment (Penting untuk keamanan)
 # -------------------------------------------------------------------------
 .env
-*.secret
+*.secretlib/shared/secrets.dart
+.env

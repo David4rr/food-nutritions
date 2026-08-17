@@ -34,7 +34,7 @@ class DashboardMetroTile extends StatelessWidget {
         height: height,
         decoration: BoxDecoration(
           color: color,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
               color: color.withValues(alpha: 0.3),

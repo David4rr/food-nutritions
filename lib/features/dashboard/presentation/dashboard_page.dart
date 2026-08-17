@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -97,26 +98,15 @@ class _DashboardPageState extends State<DashboardPage> {
         })
         .toList(growable: false);
 
-    final todayCalories = todayItems.fold<double>(
-      0,
-      (sum, e) => sum + (e.estimatedCaloriesPerProduct ?? e.calories),
-    );
-    final todayProtein = todayItems.fold<double>(
-      0,
-      (sum, e) => sum + (e.estimatedProteinPerProduct ?? e.protein),
-    );
+    final now = DateTime.now();
+    final todayKey =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final todayAggregate = history.dailyAnalytics[todayKey];
+    final todayCalories = todayAggregate?.calories ?? 0.0;
+    final todayProtein = todayAggregate?.protein ?? 0.0;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard Nutrisi'),
-        actions: [
-          IconButton(
-            tooltip: 'Tampilan aplikasi',
-            icon: const Icon(Icons.palette_rounded),
-            onPressed: _openAppearanceSettings,
-          ),
-        ],
-      ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Listener(
         behavior: HitTestBehavior.translucent,
         onPointerDown: (_) => _onUserActivity(),
@@ -135,23 +125,45 @@ class _DashboardPageState extends State<DashboardPage> {
               FutureBuilder<Box<dynamic>>(
                 future: _profileBoxFuture,
                 builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  final profileBox = snapshot.data!;
-                  return ValueListenableBuilder<Box<dynamic>>(
-                    valueListenable: profileBox.listenable(
-                      keys: const ['target_calories', 'target_protein_min'],
-                    ),
-                    builder: (context, value, _) {
-                      final target = _readTarget(value);
-                      return LayoutBuilder(
-                        builder: (context, constraints) {
-                          return ListView(
-                            padding: const EdgeInsets.all(16),
-                            children: [
-                              DashboardContent(
+                  return CustomScrollView(
+                    slivers: [
+                      SliverAppBar(
+                        pinned: true,
+                        backgroundColor: Colors.transparent,
+                        flexibleSpace: ClipRect(
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                            child: Container(
+                              color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.72),
+                            ),
+                          ),
+                        ),
+                        title: const Text('Dashboard Nutrisi'),
+                        actions: [
+                          IconButton(
+                            tooltip: 'Tampilan aplikasi',
+                            icon: const Icon(Icons.palette_rounded),
+                            onPressed: _openAppearanceSettings,
+                          ),
+                        ],
+                      ),
+                      if (!snapshot.hasData)
+                        const SliverFillRemaining(
+                          child: Center(child: CircularProgressIndicator()),
+                        )
+                      else
+                        SliverToBoxAdapter(
+                          child: ValueListenableBuilder<Box<dynamic>>(
+                            valueListenable: snapshot.data!.listenable(
+                              keys: const ['target_calories', 'target_protein_min'],
+                            ),
+                            builder: (context, value, _) {
+                              final target = _readTarget(value);
+                              return LayoutBuilder(
+                                builder: (context, constraints) {
+                                  return Padding(
+                                    padding: const EdgeInsets.all(16),
+                                    child: DashboardContent(
                                 availableWidth: constraints.maxWidth - 32,
                                 spacing: 12,
                                 allItems: history.items,
@@ -163,12 +175,14 @@ class _DashboardPageState extends State<DashboardPage> {
                                 target: target,
                                 profileBox: value,
                                 onHydrationCelebrate: _onHydrationCelebrate,
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                    ],
                   );
                 },
               ),

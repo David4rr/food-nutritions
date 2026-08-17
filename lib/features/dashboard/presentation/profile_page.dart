@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
@@ -6,7 +7,8 @@ import '../domain/nutrition_target.dart';
 import 'dashboard_sections.dart';
 import 'macro_summary_card.dart';
 import 'profile_target_form.dart';
-import '../../../shared/routes/expanding_route.dart'; // ponytail: Expanding header
+import '../../../app/theme/app_theme.dart';
+import '../../../shared/widgets/staggered_animated_tile.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -176,46 +178,84 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    const tileColor = Color(0xFF5BA7FF); // palette.profile
+    final visualMeta = Theme.of(context).extension<AppVisualMeta>();
+    final isPink = visualMeta?.isPink ?? false;
+    final tileColor = isPink
+        ? const Color(0xFFF48FB1)
+        : const Color(0xFF90CAF9); // Soft theme colors
+
     return Scaffold(
-      backgroundColor: tileColor,
-      appBar: ExpandingPageHeader(
-        child: AppBar(
-          backgroundColor: tileColor,
-          elevation: 0,
-          title: const Text(
-            'Profil Pengguna',
-            style: TextStyle(color: Colors.white),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          SliverAppBar(
+            pinned: true,
+            backgroundColor: Colors.transparent,
+            flexibleSpace: ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.72),
+                ),
+              ),
+            ),
+            foregroundColor: Colors.black87,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            title: const Text(
+              'Profil Pengguna',
+              style: TextStyle(
+                color: Colors.black87,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
-          iconTheme: const IconThemeData(color: Colors.white),
-        ),
-      ),
-      body: Container(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
-          children: [
-            ProfileTargetForm(
-              ageController: _ageController,
-              weightController: _weightController,
-              heightController: _heightController,
-              gender: _gender,
-              activity: _activity,
-              onGenderChanged: (v) => setState(() => _gender = v),
-              onActivityChanged: (v) => setState(() => _activity = v),
-              onCalculate: _calculateTarget,
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 24, 16, 40),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  StaggeredAnimatedTile(
+                    index: 0,
+                    child: ProfileTargetForm(
+                      ageController: _ageController,
+                      weightController: _weightController,
+                      heightController: _heightController,
+                      gender: _gender,
+                      activity: _activity,
+                      onGenderChanged: (v) => setState(() => _gender = v),
+                      onActivityChanged: (v) => setState(() => _activity = v),
+                      onCalculate: _calculateTarget,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  if (_target != null)
+                    StaggeredAnimatedTile(
+                      index: 1,
+                      child: MacroSummaryCard(target: _target!),
+                    ),
+                  const SizedBox(height: 24),
+                  StaggeredAnimatedTile(
+                    index: 2,
+                    child: Text(
+                      'Acuan Nutrisi per Kelompok',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  const StaggeredAnimatedTile(
+                    index: 3,
+                    child: AgeReferenceGrid(),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 12),
-            if (_target != null) MacroSummaryCard(target: _target!),
-            const SizedBox(height: 24),
-            Text(
-              'Acuan Nutrisi per Kelompok',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 10),
-            const AgeReferenceGrid(),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

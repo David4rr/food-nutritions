@@ -56,7 +56,9 @@ class ProductHistory {
       protein: data.protein,
       fat: data.fat,
       imageUrl: data.imageUrl,
-      scanDate: data.scannedAt,
+      scanDate: DateTime.fromMillisecondsSinceEpoch(
+        data.scannedAt.millisecondsSinceEpoch,
+      ),
       estimatedCaloriesPerProduct: _perProduct(data.calories, grams),
       estimatedProteinPerProduct: _perProduct(data.protein, grams),
     );

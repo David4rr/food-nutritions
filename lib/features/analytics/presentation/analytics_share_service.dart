@@ -14,7 +14,7 @@ class AnalyticsShareService {
     return RepaintBoundary(key: repaintKey, child: template);
   }
 
-  Future<Uint8List?> capture({double pixelRatio = 6.0}) async {
+  Future<Uint8List?> capture({double pixelRatio = 3.0}) async {
     try {
       // Perlu delay sedikit untuk memastikan frame ter-render sempurna
       await Future.delayed(const Duration(milliseconds: 50));

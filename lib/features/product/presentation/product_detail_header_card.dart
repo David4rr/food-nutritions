@@ -80,6 +80,7 @@ class ProductDetailHeaderCard extends StatelessWidget {
         children: [
           GestureDetector(
             onTap: () => _showImagePreview(context, item.imageUrl),
+            // ponytail: Let the native Hero transition handle the scaling, no extra entrance animation needed
             child: Hero(
               tag: productImageHeroTag(item),
               child: ClipRRect(

@@ -110,7 +110,7 @@ class AppTheme {
     );
 
     return base.copyWith(
-      textTheme: TextTheme(
+      textTheme: ThemeData.light().textTheme.copyWith(
         displaySmall: GoogleFonts.playfairDisplay(
           color: AppColors.textPrimary,
           fontWeight: FontWeight.w700,

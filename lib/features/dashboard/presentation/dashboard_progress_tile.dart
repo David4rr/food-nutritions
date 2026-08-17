@@ -106,7 +106,7 @@ class DashboardProgressTile extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${current.toStringAsFixed(0)} / ${target.toStringAsFixed(0)} $unit',
+                          '${(current * (animatedProgress / (progress == 0 ? 1 : progress))).toStringAsFixed(0)} / ${target.toStringAsFixed(0)} $unit',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.titleSmall
