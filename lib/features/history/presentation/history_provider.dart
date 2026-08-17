@@ -54,12 +54,18 @@ class HistoryProvider extends ChangeNotifier {
     required DateTime date,
     required double calories,
     required double protein,
+    double fat = 0,
+    double carbs = 0,
+    double sugars = 0,
   }) async {
     await _weeklyStatsRepository.addCaloriesForDate(date, calories);
     await _dailyAnalyticsRepository.addEntry(
       date: date,
       calories: calories,
       protein: protein,
+      fat: fat,
+      carbs: carbs,
+      sugars: sugars,
     );
     _weeklyCalories = _loadLast7DaysCalories();
     _dailyAnalytics = _loadLast7DaysAnalytics();
@@ -70,12 +76,18 @@ class HistoryProvider extends ChangeNotifier {
     required DateTime date,
     required double calories,
     required double protein,
+    double fat = 0,
+    double carbs = 0,
+    double sugars = 0,
   }) async {
     await _weeklyStatsRepository.subtractCaloriesForDate(date, calories);
     await _dailyAnalyticsRepository.removeEntry(
       date: date,
       calories: calories,
       protein: protein,
+      fat: fat,
+      carbs: carbs,
+      sugars: sugars,
     );
     _weeklyCalories = _loadLast7DaysCalories();
     _dailyAnalytics = _loadLast7DaysAnalytics();
