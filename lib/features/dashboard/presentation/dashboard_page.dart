@@ -46,8 +46,15 @@ class _DashboardPageState extends State<DashboardPage> {
   DashboardTargetData? _readTarget(Box<dynamic> box) {
     final calories = (box.get('target_calories') as num?)?.toDouble();
     final proteinMin = (box.get('target_protein_min') as num?)?.toDouble();
-    if (calories == null || proteinMin == null) return null;
-    return DashboardTargetData(calories: calories, protein: proteinMin);
+    final carbsMin = (box.get('target_carbs_min') as num?)?.toDouble();
+    final fatMin = (box.get('target_fat_min') as num?)?.toDouble();
+    if (calories == null) return null;
+    return DashboardTargetData(
+      calories: calories,
+      protein: proteinMin ?? 0,
+      carbs: carbsMin ?? 0,
+      fat: fatMin ?? 0,
+    );
   }
 
   void _onHydrationCelebrate() {
@@ -98,12 +105,14 @@ class _DashboardPageState extends State<DashboardPage> {
         })
         .toList(growable: false);
 
-    final now = DateTime.now();
-    final todayKey =
-        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-    final todayAggregate = history.dailyAnalytics[todayKey];
-    final todayCalories = todayAggregate?.calories ?? 0.0;
-    final todayProtein = todayAggregate?.protein ?? 0.0;
+    final todayMeals = history.todayMeals;
+    final todayCalories = todayMeals.fold<double>(0, (sum, m) => sum + m.calories);
+    final todayProtein = todayMeals.fold<double>(0, (sum, m) => sum + m.protein);
+    final todayCarbs = todayMeals.fold<double>(0, (sum, m) => sum + m.carbs);
+    final todayFat = todayMeals.fold<double>(0, (sum, m) => sum + m.fat);
+    final todaySugars = todayMeals.fold<double>(0, (sum, m) => sum + m.sugars);
+    final todaySodium = todayMeals.fold<double>(0, (sum, m) => sum + m.sodium);
+    final todaySaturatedFat = todayMeals.fold<double>(0, (sum, m) => sum + m.saturatedFat);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -126,6 +135,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 future: _profileBoxFuture,
                 builder: (context, snapshot) {
                   return CustomScrollView(
+                    physics: const BouncingScrollPhysics(),
                     slivers: [
                       SliverAppBar(
                         pinned: true,
@@ -155,7 +165,12 @@ class _DashboardPageState extends State<DashboardPage> {
                         SliverToBoxAdapter(
                           child: ValueListenableBuilder<Box<dynamic>>(
                             valueListenable: snapshot.data!.listenable(
-                              keys: const ['target_calories', 'target_protein_min'],
+                              keys: const [
+                                'target_calories',
+                                'target_protein_min',
+                                'target_carbs_min',
+                                'target_fat_min',
+                              ],
                             ),
                             builder: (context, value, _) {
                               final target = _readTarget(value);
@@ -164,17 +179,22 @@ class _DashboardPageState extends State<DashboardPage> {
                                   return Padding(
                                     padding: const EdgeInsets.all(16),
                                     child: DashboardContent(
-                                availableWidth: constraints.maxWidth - 32,
-                                spacing: 12,
-                                allItems: history.items,
-                                todayItems: todayItems,
-                                todayCalories: todayCalories,
-                                todayProtein: todayProtein,
-                                weeklyCalories: history.weeklyCalories,
-                                dailyAnalytics: history.dailyAnalytics,
-                                target: target,
-                                profileBox: value,
-                                onHydrationCelebrate: _onHydrationCelebrate,
+                                      availableWidth: constraints.maxWidth - 32,
+                                      spacing: 12,
+                                      allItems: history.items,
+                                      todayItems: todayItems,
+                                      todayCalories: todayCalories,
+                                      todayProtein: todayProtein,
+                                      todayCarbs: todayCarbs,
+                                      todayFat: todayFat,
+                                      todaySugars: todaySugars,
+                                      todaySodium: todaySodium,
+                                      todaySaturatedFat: todaySaturatedFat,
+                                      weeklyCalories: history.weeklyCalories,
+                                      dailyAnalytics: history.dailyAnalytics,
+                                      target: target,
+                                      profileBox: value,
+                                      onHydrationCelebrate: _onHydrationCelebrate,
                                     ),
                                   );
                                 },

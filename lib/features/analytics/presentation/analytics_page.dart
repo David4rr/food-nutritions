@@ -31,7 +31,11 @@ class AnalyticsPage extends StatelessWidget {
         final tPro =
             (box.get('target_protein_min') as num?)?.toDouble() ?? 50.0;
 
-        final data = AnalyticsEngine.compute(history.items, tCal, tPro);
+        final data = AnalyticsEngine.compute(
+          history: history,
+          tCal: tCal,
+          tPro: tPro,
+        );
 
         final palette = Theme.of(context).extension<DashboardTilePalette>();
         final mainColor = palette?.scan ?? Theme.of(context).primaryColor;

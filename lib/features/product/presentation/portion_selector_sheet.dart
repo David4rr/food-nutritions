@@ -101,6 +101,9 @@ class _PortionSelectorSheetState extends State<PortionSelectorSheet> {
   double get _calcFat => widget.product.fat * _multiplier;
   double get _calcCarbs => (widget.product.carbohydrates ?? 0) * _multiplier;
   double get _calcSugars => (widget.product.sugars ?? 0) * _multiplier;
+  double get _calcSaturatedFat => (widget.product.saturatedFat ?? 0) * _multiplier;
+  double get _calcSodium =>
+      ((widget.product.sodium ?? (widget.product.salt != null ? (widget.product.salt! * 400) : 0)) * _multiplier);
 
   Future<void> _submitIntake() async {
     HapticFeedback.mediumImpact();
@@ -119,6 +122,8 @@ class _PortionSelectorSheetState extends State<PortionSelectorSheet> {
       fat: _calcFat,
       carbs: _calcCarbs,
       sugars: _calcSugars,
+      saturatedFat: _calcSaturatedFat,
+      sodium: _calcSodium,
       loggedAt: now,
     );
 

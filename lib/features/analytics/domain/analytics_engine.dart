@@ -1,4 +1,4 @@
-import '../../history/data/product_history.dart';
+import '../../history/presentation/history_provider.dart';
 
 class DayEntry {
   const DayEntry(this.date, this.calories, this.protein, this.fat, this.carbs);
@@ -46,37 +46,38 @@ class AnalyticsData {
 }
 
 class AnalyticsEngine {
-  static AnalyticsData compute(
-    List<ProductHistory> items,
-    double tCal,
-    double tPro,
-  ) {
+  static AnalyticsData compute({
+    required HistoryProvider history,
+    required double tCal,
+    required double tPro,
+  }) {
     final now = DateTime.now();
     final startOfToday = DateTime(now.year, now.month, now.day);
 
-    // Group last 14 days (7 this week, 7 last week)
-    final Map<String, List<ProductHistory>> recentItems = {};
-    for (final item in items) {
-      if (startOfToday.difference(item.scanDate).inDays <= 14) {
-        final key =
-            '${item.scanDate.year}-${item.scanDate.month.toString().padLeft(2, '0')}-${item.scanDate.day.toString().padLeft(2, '0')}';
-        recentItems.putIfAbsent(key, () => []).add(item);
-      }
-    }
-
     List<DayEntry> thisWeek = [];
     List<DayEntry> lastWeek = [];
+    int totalWeeklyMeals = 0;
 
     for (var i = 6; i >= 0; i--) {
       final date = startOfToday.subtract(Duration(days: i));
-      final key =
-          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-      thisWeek.add(_computeDayEntry(date, recentItems[key] ?? []));
+      final dayMeals = history.getMealsForDate(date);
+      totalWeeklyMeals += dayMeals.length;
+
+      final c = dayMeals.fold<double>(0, (sum, m) => sum + m.calories);
+      final p = dayMeals.fold<double>(0, (sum, m) => sum + m.protein);
+      final f = dayMeals.fold<double>(0, (sum, m) => sum + m.fat);
+      final carbs = dayMeals.fold<double>(0, (sum, m) => sum + m.carbs);
+
+      thisWeek.add(DayEntry(date, c, p, f, carbs));
 
       final dateLast = startOfToday.subtract(Duration(days: i + 7));
-      final keyLast =
-          '${dateLast.year}-${dateLast.month.toString().padLeft(2, '0')}-${dateLast.day.toString().padLeft(2, '0')}';
-      lastWeek.add(_computeDayEntry(dateLast, recentItems[keyLast] ?? []));
+      final lastMeals = history.getMealsForDate(dateLast);
+      final cLast = lastMeals.fold<double>(0, (sum, m) => sum + m.calories);
+      final pLast = lastMeals.fold<double>(0, (sum, m) => sum + m.protein);
+      final fLast = lastMeals.fold<double>(0, (sum, m) => sum + m.fat);
+      final carbsLast = lastMeals.fold<double>(0, (sum, m) => sum + m.carbs);
+
+      lastWeek.add(DayEntry(dateLast, cLast, pLast, fLast, carbsLast));
     }
 
     final totalCalThisWeek = thisWeek.fold<double>(
@@ -102,13 +103,6 @@ class AnalyticsEngine {
     final macroP = totalMacros > 0 ? (avgPro / totalMacros) : 0.0;
     final macroF = totalMacros > 0 ? (avgFat / totalMacros) : 0.0;
     final macroC = totalMacros > 0 ? (avgCarbs / totalMacros) : 0.0;
-
-    int scans = 0;
-    for (final day in thisWeek) {
-      final key =
-          '${day.date.year}-${day.date.month.toString().padLeft(2, '0')}-${day.date.day.toString().padLeft(2, '0')}';
-      scans += (recentItems[key]?.length ?? 0);
-    }
 
     final sortedDays = List<DayEntry>.from(thisWeek)
       ..sort((a, b) {
@@ -161,34 +155,11 @@ class AnalyticsEngine {
       macroProtein: macroP,
       macroFat: macroF,
       macroCarbs: macroC,
-      totalScans: scans,
+      totalScans: totalWeeklyMeals,
       bestDay: bestDay,
       worstDay: worstDay,
       calorieTrendPercent: trend,
       insights: insights,
     );
-  }
-
-  static DayEntry _computeDayEntry(
-    DateTime date,
-    List<ProductHistory> dailyItems,
-  ) {
-    double c = 0, p = 0, f = 0, carbs = 0;
-    for (final item in dailyItems) {
-      final ratio =
-          (item.estimatedCaloriesPerProduct != null && item.calories > 0)
-          ? (item.estimatedCaloriesPerProduct! / item.calories)
-          : 1.0;
-
-      c += (item.estimatedCaloriesPerProduct ?? item.calories);
-      p += (item.estimatedProteinPerProduct ?? item.protein);
-      f += (item.fat * ratio);
-
-      // Carbs (approximation: Calories = 4*P + 9*F + 4*C => C = (Cal - 4*P - 9*F)/4)
-      double estCarbs = (c - (4 * p) - (9 * f)) / 4;
-      if (estCarbs < 0) estCarbs = 0;
-      carbs += estCarbs;
-    }
-    return DayEntry(date, c, p, f, carbs);
   }
 }

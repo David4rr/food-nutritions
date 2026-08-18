@@ -8,6 +8,7 @@ import '../../scanner/presentation/scanner_page.dart';
 import 'dashboard_metro_tile.dart';
 import 'dashboard_progress_tile.dart';
 import 'food_grade_tile.dart';
+import 'healthy_guard_tile.dart';
 import 'profile_page.dart';
 import 'smart_insight_tile.dart';
 import 'water_tracker_tile.dart';
@@ -25,6 +26,11 @@ class DashboardContent extends StatefulWidget {
     required this.todayItems,
     required this.todayCalories,
     required this.todayProtein,
+    this.todayCarbs = 0,
+    this.todayFat = 0,
+    this.todaySugars = 0,
+    this.todaySodium = 0,
+    this.todaySaturatedFat = 0,
     required this.weeklyCalories,
     required this.dailyAnalytics,
     required this.target,
@@ -38,6 +44,11 @@ class DashboardContent extends StatefulWidget {
   final List<ProductHistory> todayItems;
   final double todayCalories;
   final double todayProtein;
+  final double todayCarbs;
+  final double todayFat;
+  final double todaySugars;
+  final double todaySodium;
+  final double todaySaturatedFat;
   final Map<String, double> weeklyCalories;
   final Map<String, DailyNutritionAggregate> dailyAnalytics;
   final DashboardTargetData? target;
@@ -232,29 +243,21 @@ class _DashboardContentState extends State<DashboardContent> {
                   ),
                 ),
                 SizedBox(width: spacing),
-                TweenAnimationBuilder<double>(
-                  tween: Tween<double>(begin: 0, end: todayCalories),
-                  duration: const Duration(milliseconds: 1200),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, val, child) {
-                    return DashboardMetroTile(
-                      key: _totalTileKey,
-                      width: baseWidth,
-                      height: doubleHeight,
-                      icon: Icons.local_fire_department_outlined,
-                      title: '${val.toStringAsFixed(0)}\nkkal',
-                      subtitle: 'Total asupan scan',
-                      color: palette.total,
-                      large: true,
-                      onTap: () {
-                        context.expandTo(
-                          tileKey: _totalTileKey,
-                          page: CalendarTrendPage(
-                            targetCalories: target?.calories ?? 2000.0,
-                          ),
-                          tileColor: palette.total,
-                        );
-                      },
+                HealthyGuardTile(
+                  key: _totalTileKey,
+                  width: baseWidth,
+                  height: doubleHeight,
+                  todaySugars: widget.todaySugars,
+                  todaySodium: widget.todaySodium,
+                  todaySaturatedFat: widget.todaySaturatedFat,
+                  color: palette.total,
+                  onTap: () {
+                    context.expandTo(
+                      tileKey: _totalTileKey,
+                      page: CalendarTrendPage(
+                        targetCalories: target?.calories ?? 2000.0,
+                      ),
+                      tileColor: palette.total,
                     );
                   },
                 ),
@@ -300,8 +303,15 @@ class _DashboardContentState extends State<DashboardContent> {
 }
 
 class DashboardTargetData {
-  const DashboardTargetData({required this.calories, required this.protein});
+  const DashboardTargetData({
+    required this.calories,
+    required this.protein,
+    this.carbs = 0,
+    this.fat = 0,
+  });
 
   final double calories;
   final double protein;
+  final double carbs;
+  final double fat;
 }

@@ -14,14 +14,22 @@ import '../data/meal_entry.dart';
 import 'history_provider.dart';
 
 class DailyMealTrackerPage extends StatefulWidget {
-  const DailyMealTrackerPage({super.key});
+  const DailyMealTrackerPage({super.key, this.initialDate});
+
+  final DateTime? initialDate;
 
   @override
   State<DailyMealTrackerPage> createState() => _DailyMealTrackerPageState();
 }
 
 class _DailyMealTrackerPageState extends State<DailyMealTrackerPage> {
-  DateTime _selectedDate = DateTime.now();
+  late DateTime _selectedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDate = widget.initialDate ?? DateTime.now();
+  }
 
   bool get _isToday {
     final now = DateTime.now();

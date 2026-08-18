@@ -30,6 +30,8 @@ class MealEntry {
     this.fat = 0,
     this.carbs = 0,
     this.sugars = 0,
+    this.saturatedFat = 0,
+    this.sodium = 0,
     required this.loggedAt,
   });
 
@@ -45,6 +47,8 @@ class MealEntry {
   final double fat;
   final double carbs;
   final double sugars;
+  final double saturatedFat;
+  final double sodium; // in mg
   final DateTime loggedAt;
 
   Map<String, dynamic> toMap() {
@@ -61,6 +65,8 @@ class MealEntry {
       'fat': fat,
       'carbs': carbs,
       'sugars': sugars,
+      'saturatedFat': saturatedFat,
+      'sodium': sodium,
       'loggedAt': loggedAt.millisecondsSinceEpoch,
     };
   }
@@ -79,6 +85,8 @@ class MealEntry {
       fat: (map['fat'] as num?)?.toDouble() ?? 0,
       carbs: (map['carbs'] as num?)?.toDouble() ?? 0,
       sugars: (map['sugars'] as num?)?.toDouble() ?? 0,
+      saturatedFat: (map['saturatedFat'] as num?)?.toDouble() ?? 0,
+      sodium: (map['sodium'] as num?)?.toDouble() ?? 0,
       loggedAt: map['loggedAt'] != null
           ? DateTime.fromMillisecondsSinceEpoch((map['loggedAt'] as num).toInt())
           : DateTime.now(),

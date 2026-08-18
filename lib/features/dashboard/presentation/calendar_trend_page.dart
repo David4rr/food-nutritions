@@ -1,12 +1,16 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
+import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_theme.dart';
-import '../../history/presentation/history_provider.dart';
 import '../../../shared/widgets/animated_pressable.dart';
+import '../../history/data/meal_entry.dart';
+import '../../history/presentation/daily_meal_tracker_page.dart';
+import '../../history/presentation/history_provider.dart';
 
 class MonthData {
   const MonthData({
@@ -52,7 +56,6 @@ class _CalendarTrendPageState extends State<CalendarTrendPage> {
   }
 
   Future<void> _pickMonthYear() async {
-    // Simple year/month picker using showDatePicker (we just take the month/year)
     final initial = _selectedDate;
     final picked = await showDatePicker(
       context: context,
@@ -75,11 +78,8 @@ class _CalendarTrendPageState extends State<CalendarTrendPage> {
     final analytics = history.getAllAnalytics();
     final target = widget.targetCalories > 0 ? widget.targetCalories : 2000.0;
 
-    final isPink =
-        Theme.of(context).extension<AppVisualMeta>()?.isPink ?? false;
-    final baseColor = isPink
-        ? const Color(0xFFE45BA5)
-        : const Color(0xFF2FB8A4);
+    final palette = Theme.of(context).extension<DashboardTilePalette>();
+    final baseColor = palette?.scan ?? Theme.of(context).primaryColor;
 
     final daysInMonth = DateTime(
       _selectedDate.year,
@@ -98,27 +98,39 @@ class _CalendarTrendPageState extends State<CalendarTrendPage> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: const Text(
-          'Aktivitas Bulanan',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+        foregroundColor: AppColors.textPrimary,
+        flexibleSpace: ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.72),
+            ),
+          ),
         ),
-        iconTheme: const IconThemeData(color: Colors.black87),
+        title: Text(
+          'Aktivitas Bulanan',
+          style: GoogleFonts.dmSans(
+            fontWeight: FontWeight.w800,
+            fontSize: 19,
+            letterSpacing: -0.3,
+          ),
+        ),
       ),
       body: SafeArea(
         child: Column(
           children: [
             // Month Navigation & Filter
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
                     onPressed: _prevMonth,
-                    icon: const Icon(Icons.chevron_left_rounded, size: 32),
+                    icon: const Icon(Icons.chevron_left_rounded, size: 28),
                   ),
                   AnimatedPressable(
                     onPressed: _pickMonthYear,
@@ -140,9 +152,9 @@ class _CalendarTrendPageState extends State<CalendarTrendPage> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            DateFormat('MMMM yyyy').format(_selectedDate),
-                            style: TextStyle(
-                              fontSize: 16,
+                            DateFormat('MMMM yyyy', 'id_ID').format(_selectedDate),
+                            style: GoogleFonts.dmSans(
+                              fontSize: 15,
                               fontWeight: FontWeight.bold,
                               color: baseColor,
                             ),
@@ -153,27 +165,27 @@ class _CalendarTrendPageState extends State<CalendarTrendPage> {
                   ),
                   IconButton(
                     onPressed: _nextMonth,
-                    icon: const Icon(Icons.chevron_right_rounded, size: 32),
+                    icon: const Icon(Icons.chevron_right_rounded, size: 28),
                   ),
                 ],
               ),
             ),
 
-            // Legend
+            // Legend Bar
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
-                    'Kurang',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  Text(
+                    'Sedikit',
+                    style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.textSecondary),
                   ),
                   const SizedBox(width: 8),
                   for (var i = 1; i <= 5; i++) ...[
                     Container(
-                      width: 12,
-                      height: 12,
+                      width: 13,
+                      height: 13,
                       decoration: BoxDecoration(
                         color: i == 1
                             ? Colors.grey.shade200
@@ -183,14 +195,14 @@ class _CalendarTrendPageState extends State<CalendarTrendPage> {
                     ),
                     const SizedBox(width: 4),
                   ],
-                  const Text(
+                  Text(
                     'Target',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                    style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.textSecondary),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 18),
 
             // Weekday Headers
             Padding(
@@ -203,9 +215,9 @@ class _CalendarTrendPageState extends State<CalendarTrendPage> {
                       child: Center(
                         child: Text(
                           day,
-                          style: const TextStyle(
+                          style: GoogleFonts.dmSans(
                             fontSize: 12,
-                            color: Colors.grey,
+                            color: AppColors.textSecondary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -215,7 +227,7 @@ class _CalendarTrendPageState extends State<CalendarTrendPage> {
                 ).toList(),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
 
             // Calendar Grid
             Expanded(
@@ -223,32 +235,16 @@ class _CalendarTrendPageState extends State<CalendarTrendPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
-                  transitionBuilder: (child, animation) {
-                    return FadeTransition(
-                      opacity: animation,
-                      child: SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(0.0, 0.05),
-                          end: Offset.zero,
-                        ).animate(animation),
-                        child: child,
-                      ),
-                    );
-                  },
                   child: GridView.builder(
-                    key: ValueKey(
-                      '${_selectedDate.year}-${_selectedDate.month}',
-                    ),
+                    key: ValueKey('${_selectedDate.year}-${_selectedDate.month}'),
                     physics: const BouncingScrollPhysics(),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 7,
                       mainAxisSpacing: 8,
                       crossAxisSpacing: 8,
-                      childAspectRatio:
-                          0.75, // Membuat kotak lebih tinggi untuk teks kalori
+                      childAspectRatio: 0.76,
                     ),
-                    itemCount:
-                        monthData.emptyStartBlocks + monthData.daysInMonth,
+                    itemCount: monthData.emptyStartBlocks + monthData.daysInMonth,
                     itemBuilder: (context, index) {
                       if (index < monthData.emptyStartBlocks) {
                         return const SizedBox.shrink();
@@ -262,12 +258,16 @@ class _CalendarTrendPageState extends State<CalendarTrendPage> {
                       final key =
                           '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
+                      // Real-time synchronization from both meal entries and analytics
+                      final dayMeals = history.getMealsForDate(date);
+                      final mealCals = dayMeals.fold<double>(0, (sum, m) => sum + m.calories);
                       final data = analytics[key];
-                      final calories = data?.calories ?? 0.0;
+                      final calories = mealCals > 0 ? mealCals : (data?.calories ?? 0.0);
 
                       return _CalendarBox(
                         date: date,
                         calories: calories,
+                        meals: dayMeals,
                         target: target,
                         baseColor: baseColor,
                         delayIndex: day,
@@ -288,6 +288,7 @@ class _CalendarBox extends StatefulWidget {
   const _CalendarBox({
     required this.date,
     required this.calories,
+    required this.meals,
     required this.target,
     required this.baseColor,
     required this.delayIndex,
@@ -295,6 +296,7 @@ class _CalendarBox extends StatefulWidget {
 
   final DateTime date;
   final double calories;
+  final List<MealEntry> meals;
   final double target;
   final Color baseColor;
   final int delayIndex;
@@ -314,14 +316,14 @@ class _CalendarBoxState extends State<_CalendarBox>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 350),
     );
     _scaleAnimation = CurvedAnimation(
       parent: _controller,
       curve: Curves.easeOutBack,
     );
 
-    Future.delayed(Duration(milliseconds: (widget.delayIndex % 31) * 15), () {
+    Future.delayed(Duration(milliseconds: (widget.delayIndex % 31) * 12), () {
       if (mounted) _controller.forward();
     });
   }
@@ -339,59 +341,144 @@ class _CalendarBoxState extends State<_CalendarBox>
     return cals.toStringAsFixed(0);
   }
 
-  void _showGlassmorphicSnackbar(BuildContext context) {
-    final formatted = DateFormat('dd MMM yyyy').format(widget.date);
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        behavior: SnackBarBehavior.floating,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        content: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
+  void _showDayDetailSheet(BuildContext context) {
+    final formatted = DateFormat('EEEE, d MMMM yyyy', 'id_ID').format(widget.date);
+    final totalProtein = widget.meals.fold<double>(0, (sum, m) => sum + m.protein);
+    final totalCarbs = widget.meals.fold<double>(0, (sum, m) => sum + m.carbs);
+    final totalFat = widget.meals.fold<double>(0, (sum, m) => sum + m.fat);
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.6),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                color: Colors.white.withValues(alpha: 0.96),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                border: Border(
+                  top: BorderSide(color: widget.baseColor.withValues(alpha: 0.2)),
+                ),
               ),
-              child: Row(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(
-                    Icons.calendar_month_rounded,
-                    color: Colors.white.withValues(alpha: 0.8),
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      formatted,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
+                  // Pill Handle
+                  Center(
+                    child: Container(
+                      width: 36,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(4),
                       ),
                     ),
                   ),
-                  Text(
-                    '${widget.calories.toStringAsFixed(0)} kkal',
-                    style: TextStyle(
-                      color: widget.baseColor
-                          .withValues(alpha: 0.9)
-                          .withAlpha(255),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                  const SizedBox(height: 16),
+
+                  // Header Date & Total Calories
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            formatted,
+                            style: GoogleFonts.dmSans(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 16,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${widget.meals.length} item makanan dicatat',
+                            style: GoogleFonts.dmSans(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: widget.baseColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${widget.calories.toStringAsFixed(0)} kkal',
+                          style: GoogleFonts.dmSans(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 15,
+                            color: widget.baseColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  if (widget.calories > 0) ...[
+                    const SizedBox(height: 14),
+                    // Macro Summary Row
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF9FAFB),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _MacroStat(label: 'Protein', value: '${totalProtein.toStringAsFixed(1)}g', color: widget.baseColor),
+                          Container(width: 1, height: 22, color: Colors.black.withValues(alpha: 0.06)),
+                          _MacroStat(label: 'Karbo', value: '${totalCarbs.toStringAsFixed(1)}g', color: widget.baseColor),
+                          Container(width: 1, height: 22, color: Colors.black.withValues(alpha: 0.06)),
+                          _MacroStat(label: 'Lemak', value: '${totalFat.toStringAsFixed(1)}g', color: widget.baseColor),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 16),
+
+                  // Open Full Diary Action Button
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: widget.baseColor,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    onPressed: () {
+                      Navigator.of(sheetContext).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => DailyMealTrackerPage(initialDate: widget.date),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      widget.calories > 0 ? 'Buka Jurnal Tanggal Ini' : '+ Catat Makanan di Tanggal Ini',
+                      style: GoogleFonts.dmSans(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -399,13 +486,13 @@ class _CalendarBoxState extends State<_CalendarBox>
   Widget build(BuildContext context) {
     Color boxColor = Colors.grey.shade200;
     if (widget.calories > 0) {
-      final ratio = (widget.calories / widget.target).clamp(0.2, 1.0);
+      final ratio = (widget.calories / widget.target).clamp(0.25, 1.0);
       boxColor = widget.baseColor.withValues(alpha: ratio);
     }
 
     final hasRecord = widget.calories > 0;
     final isDarkBackground =
-        hasRecord && (widget.calories / widget.target) > 0.5;
+        hasRecord && (widget.calories / widget.target) > 0.45;
     final textColor = isDarkBackground ? Colors.white : Colors.black87;
     final subTextColor = isDarkBackground ? Colors.white70 : Colors.black54;
 
@@ -418,15 +505,13 @@ class _CalendarBoxState extends State<_CalendarBox>
         },
         onTapUp: (_) => setState(() => _isHovered = false),
         onTapCancel: () => setState(() => _isHovered = false),
-        onTap: () => _showGlassmorphicSnackbar(context),
+        onTap: () => _showDayDetailSheet(context),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           curve: Curves.easeOutCubic,
-          transform: Matrix4.identity()..scale(_isHovered ? 0.80 : 1.0),
-          transformAlignment: Alignment.center,
           decoration: BoxDecoration(
             color: boxColor,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(9),
             border: Border.all(
               color: hasRecord
                   ? widget.baseColor.withValues(alpha: 0.3)
@@ -448,19 +533,19 @@ class _CalendarBoxState extends State<_CalendarBox>
             children: [
               Text(
                 '${widget.date.day}',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
+                style: GoogleFonts.dmSans(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w800,
                   color: hasRecord ? textColor : Colors.grey.shade400,
                 ),
               ),
               if (hasRecord) ...[
-                const SizedBox(height: 2),
+                const SizedBox(height: 1),
                 Text(
                   _formatCalories(widget.calories),
-                  style: TextStyle(
+                  style: GoogleFonts.dmSans(
                     fontSize: 10,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                     color: subTextColor,
                   ),
                 ),
@@ -469,6 +554,42 @@ class _CalendarBoxState extends State<_CalendarBox>
           ),
         ),
       ),
+    );
+  }
+}
+
+class _MacroStat extends StatelessWidget {
+  const _MacroStat({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: GoogleFonts.dmSans(
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+            color: color,
+          ),
+        ),
+        const SizedBox(height: 1),
+        Text(
+          label,
+          style: GoogleFonts.dmSans(
+            fontSize: 10,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ],
     );
   }
 }
