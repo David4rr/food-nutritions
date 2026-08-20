@@ -3,7 +3,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_theme.dart';
+import '../../../shared/widgets/animated_pressable.dart';
+import '../../../shared/widgets/top_liquid_snackbar.dart';
 import '../../product/domain/product_view_data.dart';
 import '../domain/pantry_item.dart';
 import 'pantry_provider.dart';
@@ -20,7 +23,11 @@ class AddToPantrySheet extends StatefulWidget {
     return showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      showDragHandle: true,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (_) => AddToPantrySheet(product: product),
     );
   }
@@ -43,7 +50,6 @@ class _AddToPantrySheetState extends State<AddToPantrySheet> {
     final p = widget.product;
     final quantityStr = p.quantity?.toLowerCase() ?? '';
 
-    // Auto-detect unit & capacity if available in quantity string (e.g. "1000 ml", "500 g")
     if (quantityStr.contains('ml') || quantityStr.contains('l')) {
       _unit = 'ml';
       if (quantityStr.contains('1 l') || quantityStr.contains('1000')) {
@@ -78,17 +84,6 @@ class _AddToPantrySheetState extends State<AddToPantrySheet> {
       initialDate: _expiryDate ?? now.add(const Duration(days: 14)),
       firstDate: now.subtract(const Duration(days: 30)),
       lastDate: now.add(const Duration(days: 365 * 3)),
-      builder: (context, child) {
-        final theme = Theme.of(context);
-        return Theme(
-          data: theme.copyWith(
-            colorScheme: theme.colorScheme.copyWith(
-              primary: const Color(0xFF2FB8A4),
-            ),
-          ),
-          child: child!,
-        );
-      },
     );
 
     if (picked != null) {
@@ -116,24 +111,10 @@ class _AddToPantrySheetState extends State<AddToPantrySheet> {
 
       if (mounted) {
         Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: const Color(0xFF2FB8A4),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    '${widget.product.name} berhasil disimpan ke ${_location.label}!',
-                    style: GoogleFonts.dmSans(fontWeight: FontWeight.w600, color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-          ),
+        TopLiquidSnackBar.show(
+          context,
+          message: '${widget.product.name} berhasil disimpan ke ${_location.label}!',
+          type: AppNotificationType.success,
         );
       }
     } finally {
@@ -143,55 +124,37 @@ class _AddToPantrySheetState extends State<AddToPantrySheet> {
 
   @override
   Widget build(BuildContext context) {
-    final visualMeta = Theme.of(context).extension<AppVisualMeta>();
+    final theme = Theme.of(context);
+    final visualMeta = theme.extension<AppVisualMeta>();
+    final palette = theme.extension<DashboardTilePalette>();
     final isPink = visualMeta?.isPink ?? false;
-    final primaryColor = isPink ? const Color(0xFFE91E63) : const Color(0xFF2FB8A4);
+    final primaryColor = palette?.scan ?? (isPink ? const Color(0xFFE91E63) : AppColors.accent);
 
-    return Container(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 20,
-            offset: const Offset(0, -4),
-          ),
-        ],
+    final cardBorder = isPink
+        ? primaryColor.withValues(alpha: 0.18)
+        : Colors.black.withValues(alpha: 0.08);
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        20,
+        0,
+        20,
+        MediaQuery.of(context).viewInsets.bottom + 24,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Drag handle
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(999),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-
           // Header
           Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: primaryColor.withValues(alpha: 0.15),
+                  color: primaryColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(Icons.kitchen_rounded, color: primaryColor, size: 24),
+                child: Icon(Icons.kitchen_rounded, color: primaryColor, size: 22),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -201,8 +164,9 @@ class _AddToPantrySheetState extends State<AddToPantrySheet> {
                     Text(
                       'Simpan ke Kulkas / Pantry',
                       style: GoogleFonts.dmSans(
-                        fontSize: 17,
+                        fontSize: 16.5,
                         fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                     Text(
@@ -210,8 +174,8 @@ class _AddToPantrySheetState extends State<AddToPantrySheet> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.dmSans(
-                        fontSize: 13,
-                        color: Colors.grey.shade600,
+                        fontSize: 12.5,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -219,15 +183,15 @@ class _AddToPantrySheetState extends State<AddToPantrySheet> {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
 
-          // 1. Lokasi Penyimpanan (Tabs)
+          // 1. Lokasi Penyimpanan (Pills)
           Text(
             'Lokasi Penyimpanan',
             style: GoogleFonts.dmSans(
-              fontSize: 13,
+              fontSize: 12.5,
               fontWeight: FontWeight.w700,
-              color: Colors.grey.shade700,
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
@@ -235,87 +199,90 @@ class _AddToPantrySheetState extends State<AddToPantrySheet> {
             children: PantryLocation.values.map((loc) {
               final isSelected = _location == loc;
               return Expanded(
-                child: GestureDetector(
-                  onTap: () => setState(() => _location = loc),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    decoration: BoxDecoration(
-                      color: isSelected ? primaryColor : Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: isSelected ? primaryColor : Colors.grey.shade300,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 3.0),
+                  child: AnimatedPressable(
+                    onPressed: () => setState(() => _location = loc),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? primaryColor.withValues(alpha: 0.14)
+                            : theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isSelected ? primaryColor : cardBorder,
+                          width: isSelected ? 1.5 : 1.0,
+                        ),
                       ),
-                      boxShadow: isSelected
-                          ? [
-                              BoxShadow(
-                                color: primaryColor.withValues(alpha: 0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ]
-                          : null,
-                    ),
-                    child: Column(
-                      children: [
-                        Icon(
-                          loc == PantryLocation.fridge
-                              ? Icons.ac_unit_rounded
-                              : (loc == PantryLocation.shelf ? Icons.inventory_2_outlined : Icons.severe_cold_rounded),
-                          color: isSelected ? Colors.white : Colors.grey.shade700,
-                          size: 18,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          loc.label,
-                          style: GoogleFonts.dmSans(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w700,
-                            color: isSelected ? Colors.white : Colors.grey.shade800,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            loc == PantryLocation.fridge
+                                ? Icons.ac_unit_rounded
+                                : (loc == PantryLocation.shelf
+                                    ? Icons.inventory_2_outlined
+                                    : Icons.severe_cold_rounded),
+                            color: isSelected ? primaryColor : AppColors.textSecondary,
+                            size: 18,
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 4),
+                          Text(
+                            loc.label,
+                            style: GoogleFonts.dmSans(
+                              fontSize: 11.5,
+                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                              color: isSelected ? primaryColor : AppColors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               );
             }).toList(),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
 
-          // 2. Kapasitas Total & Satuan
+          // 2. Kapasitas & Satuan
           Row(
             children: [
               Expanded(
-                flex: 2,
+                flex: 3,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Total Kapasitas Kemasan',
                       style: GoogleFonts.dmSans(
-                        fontSize: 12,
+                        fontSize: 12.5,
                         fontWeight: FontWeight.w700,
-                        color: Colors.grey.shade700,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 6),
                     TextField(
                       controller: _capacityController,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      style: GoogleFonts.dmSans(fontWeight: FontWeight.w800, fontSize: 16),
+                      style: GoogleFonts.dmSans(fontWeight: FontWeight.w700, fontSize: 14.5),
                       decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: theme.colorScheme.surface,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
+                          borderSide: BorderSide(color: cardBorder),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
+                          borderSide: BorderSide(color: cardBorder),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: primaryColor, width: 1.5),
                         ),
                       ),
                     ),
@@ -324,30 +291,36 @@ class _AddToPantrySheetState extends State<AddToPantrySheet> {
               ),
               const SizedBox(width: 12),
               Expanded(
+                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Satuan',
                       style: GoogleFonts.dmSans(
-                        fontSize: 12,
+                        fontSize: 12.5,
                         fontWeight: FontWeight.w700,
-                        color: Colors.grey.shade700,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      height: 48,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: theme.colorScheme.surface,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade300),
+                        border: Border.all(color: cardBorder),
                       ),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
                           value: _unit,
                           isExpanded: true,
-                          style: GoogleFonts.dmSans(fontWeight: FontWeight.w800, color: Colors.black87),
+                          style: GoogleFonts.dmSans(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            color: AppColors.textPrimary,
+                          ),
                           items: const [
                             DropdownMenuItem(value: 'ml', child: Text('ml')),
                             DropdownMenuItem(value: 'g', child: Text('g')),
@@ -368,7 +341,7 @@ class _AddToPantrySheetState extends State<AddToPantrySheet> {
           ),
           const SizedBox(height: 14),
 
-          // 3. Porsi Quick Pour (Default Serving) & Tanggal Kedaluwarsa
+          // 3. Porsi Sekali Tuang & Tanggal Expired
           Row(
             children: [
               Expanded(
@@ -376,30 +349,34 @@ class _AddToPantrySheetState extends State<AddToPantrySheet> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Takaran 1x Tuang / Ambil',
+                      'Takaran Sekali Ambil',
                       style: GoogleFonts.dmSans(
-                        fontSize: 12,
+                        fontSize: 12.5,
                         fontWeight: FontWeight.w700,
-                        color: Colors.grey.shade700,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 6),
                     TextField(
                       controller: _servingController,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      style: GoogleFonts.dmSans(fontWeight: FontWeight.w800, fontSize: 16),
+                      style: GoogleFonts.dmSans(fontWeight: FontWeight.w700, fontSize: 14.5),
                       decoration: InputDecoration(
                         suffixText: _unit,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: theme.colorScheme.surface,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
+                          borderSide: BorderSide(color: cardBorder),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
+                          borderSide: BorderSide(color: cardBorder),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: primaryColor, width: 1.5),
                         ),
                       ),
                     ),
@@ -414,9 +391,9 @@ class _AddToPantrySheetState extends State<AddToPantrySheet> {
                     Text(
                       'Kedaluwarsa (Opsional)',
                       style: GoogleFonts.dmSans(
-                        fontSize: 12,
+                        fontSize: 12.5,
                         fontWeight: FontWeight.w700,
-                        color: Colors.grey.shade700,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -424,11 +401,12 @@ class _AddToPantrySheetState extends State<AddToPantrySheet> {
                       onTap: _pickExpiryDate,
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        height: 48,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: theme.colorScheme.surface,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.shade300),
+                          border: Border.all(color: cardBorder),
                         ),
                         child: Row(
                           children: [
@@ -440,9 +418,9 @@ class _AddToPantrySheetState extends State<AddToPantrySheet> {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: GoogleFonts.dmSans(
-                                  fontSize: 13,
-                                  fontWeight: _expiryDate != null ? FontWeight.w800 : FontWeight.w500,
-                                  color: _expiryDate != null ? Colors.black87 : Colors.grey.shade500,
+                                  fontSize: 12.5,
+                                  fontWeight: _expiryDate != null ? FontWeight.w700 : FontWeight.w500,
+                                  color: _expiryDate != null ? AppColors.textPrimary : AppColors.textSecondary,
                                 ),
                               ),
                             ),
@@ -455,34 +433,37 @@ class _AddToPantrySheetState extends State<AddToPantrySheet> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 22),
 
           // Save Button
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton(
-              onPressed: _isSaving ? null : _saveToPantry,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                elevation: 2,
+          AnimatedPressable(
+            onPressed: _isSaving ? null : _saveToPantry,
+            child: Container(
+              width: double.infinity,
+              height: 48,
+              decoration: BoxDecoration(
+                color: primaryColor,
+                borderRadius: BorderRadius.circular(14),
               ),
+              alignment: Alignment.center,
               child: _isSaving
                   ? const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.2),
                     )
                   : Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.bookmark_add_rounded, size: 20),
+                        const Icon(Icons.bookmark_add_rounded, size: 18, color: Colors.white),
                         const SizedBox(width: 8),
                         Text(
                           'Simpan ke ${_location.label}',
-                          style: GoogleFonts.dmSans(fontSize: 15, fontWeight: FontWeight.w800),
+                          style: GoogleFonts.dmSans(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
                         ),
                       ],
                     ),

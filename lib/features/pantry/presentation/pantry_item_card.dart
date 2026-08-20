@@ -1,10 +1,14 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_theme.dart';
+import '../../../shared/widgets/animated_pressable.dart';
+import '../../../shared/widgets/top_liquid_snackbar.dart';
 import '../../history/data/meal_entry.dart';
 import '../../history/presentation/history_provider.dart';
 import '../domain/pantry_item.dart';
@@ -27,7 +31,7 @@ class _PantryItemCardState extends State<PantryItemCard> {
 
   Future<void> _quickConsume() async {
     if (widget.item.isFinished) {
-      _showRefillDialog();
+      _showRefillSheet();
       return;
     }
 
@@ -38,6 +42,7 @@ class _PantryItemCardState extends State<PantryItemCard> {
     final currentCategory = MealTimeCategory.fromCurrentTime();
 
     setState(() => _isLogging = true);
+    HapticFeedback.lightImpact();
 
     try {
       final pantryProvider = context.read<PantryProvider>();
@@ -51,25 +56,10 @@ class _PantryItemCardState extends State<PantryItemCard> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: const Color(0xFF2FB8A4),
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 2),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    '+${amount.toStringAsFixed(0)} ${widget.item.unit} dicatat ke ${currentCategory.label}!',
-                    style: GoogleFonts.dmSans(fontWeight: FontWeight.w600, color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-          ),
+        TopLiquidSnackBar.show(
+          context,
+          message: '+${amount.toStringAsFixed(0)} ${widget.item.unit} ${widget.item.name} dicatat ke ${currentCategory.label}',
+          type: AppNotificationType.success,
         );
       }
     } finally {
@@ -77,33 +67,56 @@ class _PantryItemCardState extends State<PantryItemCard> {
     }
   }
 
-  void _showCustomConsumeDialog() {
+  void _showCustomConsumeSheet() {
     final controller = TextEditingController(
       text: widget.item.defaultServingSize.toStringAsFixed(0),
     );
     var selectedCategory = MealTimeCategory.fromCurrentTime();
 
-    showDialog(
+    showModalBottomSheet<void>(
       context: context,
-      builder: (dialogCtx) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: Text(
-              'Catat Porsi Kustom',
-              style: GoogleFonts.dmSans(fontWeight: FontWeight.w800, fontSize: 18),
+      showDragHandle: true,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetCtx) => StatefulBuilder(
+        builder: (ctx, setModalState) {
+          final isPink = Theme.of(ctx).extension<AppVisualMeta>()?.isPink ?? false;
+          final palette = Theme.of(ctx).extension<DashboardTilePalette>();
+          final primaryColor = palette?.scan ?? (isPink ? const Color(0xFFE91E63) : AppColors.accent);
+
+          return Padding(
+            padding: EdgeInsets.fromLTRB(
+              20,
+              0,
+              20,
+              MediaQuery.of(ctx).viewInsets.bottom + 24,
             ),
-            content: Column(
+            child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
+                  'Catat Porsi Kustom',
+                  style: GoogleFonts.dmSans(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
                   widget.item.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.dmSans(fontSize: 13, color: Colors.grey.shade600),
+                  style: GoogleFonts.dmSans(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 16),
                 TextField(
                   controller: controller,
                   autofocus: true,
@@ -111,113 +124,215 @@ class _PantryItemCardState extends State<PantryItemCard> {
                   decoration: InputDecoration(
                     labelText: 'Jumlah Konsumsi (${widget.item.unit})',
                     suffixText: widget.item.unit,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    filled: true,
+                    fillColor: Colors.grey.withValues(alpha: 0.08),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(color: primaryColor, width: 1.5),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 16),
                 Text(
-                  'Waktu Makan:',
-                  style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700),
+                  'Waktu Makan',
+                  style: GoogleFonts.dmSans(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
-                const SizedBox(height: 6),
-                Wrap(
-                  spacing: 6,
-                  children: MealTimeCategory.values.map((cat) {
-                    final isSel = selectedCategory == cat;
-                    return ChoiceChip(
-                      label: Text(cat.label, style: const TextStyle(fontSize: 11)),
-                      selected: isSel,
-                      onSelected: (_) => setDialogState(() => selectedCategory = cat),
+                const SizedBox(height: 8),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: MealTimeCategory.values.map((cat) {
+                      final isSel = selectedCategory == cat;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: ChoiceChip(
+                          label: Text(cat.label),
+                          selected: isSel,
+                          selectedColor: primaryColor.withValues(alpha: 0.15),
+                          labelStyle: GoogleFonts.dmSans(
+                            fontSize: 12,
+                            fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
+                            color: isSel ? primaryColor : AppColors.textPrimary,
+                          ),
+                          side: BorderSide(
+                            color: isSel ? primaryColor : Colors.grey.withValues(alpha: 0.2),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          onSelected: (_) => setModalState(() => selectedCategory = cat),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                AnimatedPressable(
+                  onPressed: () async {
+                    final amount = double.tryParse(controller.text.replaceAll(',', '.')) ?? 0;
+                    if (amount <= 0) return;
+                    Navigator.pop(sheetCtx);
+
+                    final pantryProvider = context.read<PantryProvider>();
+                    final historyProvider = context.read<HistoryProvider>();
+                    await pantryProvider.consumePortion(
+                      item: widget.item,
+                      amount: amount,
+                      category: selectedCategory,
+                      historyProvider: historyProvider,
                     );
-                  }).toList(),
+                    if (mounted) {
+                      TopLiquidSnackBar.show(
+                        context,
+                        message: '+${amount.toStringAsFixed(0)} ${widget.item.unit} ${widget.item.name} dicatat ke ${selectedCategory.label}',
+                        type: AppNotificationType.success,
+                      );
+                    }
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: primaryColor,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      'Simpan ke Jurnal',
+                      style: GoogleFonts.dmSans(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14.5,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogCtx),
-                child: const Text('Batal'),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  final amount = double.tryParse(controller.text.replaceAll(',', '.')) ?? 0;
-                  if (amount <= 0) return;
-                  Navigator.pop(dialogCtx);
-
-                  final pantryProvider = context.read<PantryProvider>();
-                  final historyProvider = context.read<HistoryProvider>();
-                  await pantryProvider.consumePortion(
-                    item: widget.item,
-                    amount: amount,
-                    category: selectedCategory,
-                    historyProvider: historyProvider,
-                  );
-                },
-                child: const Text('Catat'),
-              ),
-            ],
           );
         },
       ),
     );
   }
 
-  void _showRefillDialog() {
+  void _showRefillSheet() {
     final controller = TextEditingController(
       text: widget.item.totalCapacity.toStringAsFixed(0),
     );
 
-    showDialog(
+    showModalBottomSheet<void>(
       context: context,
-      builder: (dialogCtx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          'Isi Ulang (Refill)',
-          style: GoogleFonts.dmSans(fontWeight: FontWeight.w800, fontSize: 18),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Reset sisa isi ${widget.item.name} ke kapasitas penuh.',
-              style: GoogleFonts.dmSans(fontSize: 13, color: Colors.grey.shade600),
-            ),
-            const SizedBox(height: 14),
-            TextField(
-              controller: controller,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                labelText: 'Kapasitas Baru (${widget.item.unit})',
-                suffixText: widget.item.unit,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogCtx),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final newCap = double.tryParse(controller.text.replaceAll(',', '.')) ?? widget.item.totalCapacity;
-              Navigator.pop(dialogCtx);
-              await context.read<PantryProvider>().refillItem(widget.item.id, newCapacity: newCap);
-            },
-            child: const Text('Isi Ulang'),
-          ),
-        ],
+      showDragHandle: true,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
+      builder: (sheetCtx) {
+        final isPink = Theme.of(sheetCtx).extension<AppVisualMeta>()?.isPink ?? false;
+        final palette = Theme.of(sheetCtx).extension<DashboardTilePalette>();
+        final primaryColor = palette?.scan ?? (isPink ? const Color(0xFFE91E63) : AppColors.accent);
+
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            0,
+            20,
+            MediaQuery.of(sheetCtx).viewInsets.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Isi Ulang (Refill)',
+                style: GoogleFonts.dmSans(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Reset sisa isi ${widget.item.name} ke kapasitas penuh.',
+                style: GoogleFonts.dmSans(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: 'Kapasitas Baru (${widget.item.unit})',
+                  suffixText: widget.item.unit,
+                  filled: true,
+                  fillColor: Colors.grey.withValues(alpha: 0.08),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: primaryColor, width: 1.5),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              AnimatedPressable(
+                onPressed: () async {
+                  final newCap = double.tryParse(controller.text.replaceAll(',', '.')) ?? widget.item.totalCapacity;
+                  Navigator.pop(sheetCtx);
+                  await context.read<PantryProvider>().refillItem(widget.item.id, newCapacity: newCap);
+                  if (mounted) {
+                    TopLiquidSnackBar.show(
+                      context,
+                      message: '${widget.item.name} berhasil diisi ulang!',
+                      type: AppNotificationType.success,
+                    );
+                  }
+                },
+                child: Container(
+                  width: double.infinity,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: primaryColor,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    'Isi Ulang Penuh',
+                    style: GoogleFonts.dmSans(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14.5,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final visualMeta = Theme.of(context).extension<AppVisualMeta>();
+    final theme = Theme.of(context);
+    final visualMeta = theme.extension<AppVisualMeta>();
+    final palette = theme.extension<DashboardTilePalette>();
     final isPink = visualMeta?.isPink ?? false;
-    final primaryColor = isPink ? const Color(0xFFE91E63) : const Color(0xFF2FB8A4);
+    final primaryColor = palette?.scan ?? (isPink ? const Color(0xFFE91E63) : AppColors.accent);
 
     final item = widget.item;
     final pct = item.remainingPercent;
@@ -226,44 +341,46 @@ class _PantryItemCardState extends State<PantryItemCard> {
     if (item.isFinished) {
       progressColor = Colors.grey.shade400;
     } else if (item.isLowStock) {
-      progressColor = Colors.red.shade400;
-    } else if (pct < 0.5) {
-      progressColor = Colors.amber.shade600;
+      progressColor = const Color(0xFFE53935);
+    } else if (pct < 0.4) {
+      progressColor = const Color(0xFFF59E0B);
     }
 
-    return Container(
+    final cardBorder = isPink
+        ? primaryColor.withValues(alpha: 0.18)
+        : Colors.black.withValues(alpha: 0.06);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 380),
+      curve: Curves.easeInOutCubic,
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: item.isFinished
-              ? Colors.grey.shade200
-              : (item.isLowStock ? Colors.red.shade100 : Colors.grey.shade200),
-        ),
+        border: Border.all(color: cardBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(14),
         child: Column(
           children: [
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 1. Thumbnail Image with Location Icon Badge
+                // 1. Thumbnail Image with Location Badge
                 Stack(
                   children: [
                     Container(
                       width: 58,
                       height: 58,
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
+                        color: Colors.grey.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       clipBehavior: Clip.antiAlias,
@@ -291,10 +408,10 @@ class _PantryItemCardState extends State<PantryItemCard> {
                             ),
                     ),
                     Positioned(
-                      left: 2,
-                      top: 2,
+                      left: 3,
+                      top: 3,
                       child: Container(
-                        padding: const EdgeInsets.all(3),
+                        padding: const EdgeInsets.all(3.5),
                         decoration: BoxDecoration(
                           color: primaryColor.withValues(alpha: 0.9),
                           borderRadius: BorderRadius.circular(6),
@@ -303,7 +420,7 @@ class _PantryItemCardState extends State<PantryItemCard> {
                           item.location == PantryLocation.fridge
                               ? Icons.ac_unit_rounded
                               : (item.location == PantryLocation.shelf
-                                  ? Icons.shelves
+                                  ? Icons.inventory_2_outlined
                                   : Icons.severe_cold_rounded),
                           color: Colors.white,
                           size: 10,
@@ -314,7 +431,7 @@ class _PantryItemCardState extends State<PantryItemCard> {
                 ),
                 const SizedBox(width: 12),
 
-                // 2. Name, Brand & Expiry Warning
+                // 2. Name, Brand & Expiry Status
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -322,15 +439,17 @@ class _PantryItemCardState extends State<PantryItemCard> {
                       Row(
                         children: [
                           if (item.brand != null && item.brand!.isNotEmpty) ...[
-                            Text(
-                              item.brand!.toUpperCase(),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.dmSans(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.grey.shade500,
-                                letterSpacing: 0.5,
+                            Flexible(
+                              child: Text(
+                                item.brand!.toUpperCase(),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.dmSans(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textSecondary,
+                                  letterSpacing: 0.4,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 6),
@@ -339,15 +458,15 @@ class _PantryItemCardState extends State<PantryItemCard> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
                               decoration: BoxDecoration(
-                                color: Colors.amber.shade100,
-                                borderRadius: BorderRadius.circular(4),
+                                color: const Color(0xFFFEF3C7),
+                                borderRadius: BorderRadius.circular(5),
                               ),
                               child: Text(
-                                'Segera Exp',
+                                'Exp Segera',
                                 style: GoogleFonts.dmSans(
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.amber.shade900,
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFFB45309),
                                 ),
                               ),
                             ),
@@ -359,18 +478,19 @@ class _PantryItemCardState extends State<PantryItemCard> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.dmSans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: item.isFinished ? Colors.grey.shade500 : Colors.black87,
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w700,
+                          color: item.isFinished
+                              ? AppColors.textSecondary
+                              : AppColors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        '${item.caloriesPer100.toStringAsFixed(0)} kkal • ${item.proteinPer100.toStringAsFixed(1)}g prot per 100${item.unit}',
+                        '${item.caloriesPer100.toStringAsFixed(0)} kkal • ${item.proteinPer100.toStringAsFixed(1)}g protein / 100${item.unit}',
                         style: GoogleFonts.dmSans(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.grey.shade600,
+                          fontSize: 11.5,
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ],
@@ -379,13 +499,18 @@ class _PantryItemCardState extends State<PantryItemCard> {
 
                 // 3. More Menu
                 PopupMenuButton<String>(
-                  icon: Icon(Icons.more_vert_rounded, size: 20, color: Colors.grey.shade600),
+                  icon: const Icon(Icons.more_vert_rounded, size: 20),
+                  color: theme.colorScheme.surface,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(color: cardBorder),
+                  ),
                   padding: EdgeInsets.zero,
                   onSelected: (val) {
                     if (val == 'custom') {
-                      _showCustomConsumeDialog();
+                      _showCustomConsumeSheet();
                     } else if (val == 'refill') {
-                      _showRefillDialog();
+                      _showRefillSheet();
                     } else if (val == 'delete') {
                       context.read<PantryProvider>().deleteItem(item.id);
                     }
@@ -397,7 +522,7 @@ class _PantryItemCardState extends State<PantryItemCard> {
                         children: [
                           Icon(Icons.tune_rounded, size: 18),
                           SizedBox(width: 8),
-                          Text('Catat Porsi Kustom'),
+                          Text('Porsi Kustom'),
                         ],
                       ),
                     ),
@@ -425,9 +550,9 @@ class _PantryItemCardState extends State<PantryItemCard> {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
 
-            // 4. Fill Bar / Capacity Indicator
+            // 4. Sisa Kapasitas Progress Bar
             Column(
               children: [
                 Row(
@@ -438,53 +563,63 @@ class _PantryItemCardState extends State<PantryItemCard> {
                           ? 'Habis'
                           : 'Sisa ${item.remainingAmount.toStringAsFixed(0)} / ${item.totalCapacity.toStringAsFixed(0)} ${item.unit}',
                       style: GoogleFonts.dmSans(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: item.isLowStock ? Colors.red.shade700 : Colors.grey.shade700,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: item.isLowStock
+                            ? const Color(0xFFDC2626)
+                            : AppColors.textSecondary,
                       ),
                     ),
                     Text(
                       '${(pct * 100).toStringAsFixed(0)}%',
                       style: GoogleFonts.dmSans(
-                        fontSize: 11,
+                        fontSize: 11.5,
                         fontWeight: FontWeight.w800,
                         color: progressColor,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 5),
+                const SizedBox(height: 6),
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: BorderRadius.circular(99),
                   child: LinearProgressIndicator(
-                    minHeight: 6,
+                    minHeight: 5.5,
                     value: pct,
-                    backgroundColor: Colors.grey.shade200,
+                    backgroundColor: Colors.grey.withValues(alpha: 0.12),
                     valueColor: AlwaysStoppedAnimation(progressColor),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
 
-            // 5. Action Row (Quick 1-Tap Log Button)
+            // 5. Action Row: Expiry label & Quick Consume Button
             Row(
               children: [
                 if (item.expiryDate != null)
                   Expanded(
                     child: Row(
                       children: [
-                        Icon(Icons.event_outlined, size: 13, color: Colors.grey.shade500),
+                        Icon(
+                          Icons.event_outlined,
+                          size: 13.5,
+                          color: item.isExpiringSoon
+                              ? const Color(0xFFB45309)
+                              : AppColors.textSecondary,
+                        ),
                         const SizedBox(width: 4),
                         Flexible(
                           child: Text(
-                            'Exp: ${DateFormat('d MMM').format(item.expiryDate!)}',
+                            'Exp: ${DateFormat('d MMM yyyy').format(item.expiryDate!)}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.dmSans(
-                              fontSize: 11,
+                              fontSize: 11.5,
                               fontWeight: FontWeight.w600,
-                              color: item.isExpiringSoon ? Colors.amber.shade900 : Colors.grey.shade600,
+                              color: item.isExpiringSoon
+                                  ? const Color(0xFFB45309)
+                                  : AppColors.textSecondary,
                             ),
                           ),
                         ),
@@ -493,22 +628,26 @@ class _PantryItemCardState extends State<PantryItemCard> {
                   )
                 else
                   const Spacer(),
-                SizedBox(
-                  height: 34,
-                  child: ElevatedButton(
-                    onPressed: _isLogging ? null : _quickConsume,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: item.isFinished ? Colors.grey.shade300 : primaryColor,
-                      foregroundColor: item.isFinished ? Colors.grey.shade700 : Colors.white,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                AnimatedPressable(
+                  onPressed: _isLogging ? null : _quickConsume,
+                  child: Container(
+                    height: 36,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    decoration: BoxDecoration(
+                      color: item.isFinished
+                          ? Colors.grey.withValues(alpha: 0.12)
+                          : primaryColor,
+                      borderRadius: BorderRadius.circular(11),
                     ),
+                    alignment: Alignment.center,
                     child: _isLogging
                         ? const SizedBox(
                             width: 14,
                             height: 14,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
                         : Row(
                             mainAxisSize: MainAxisSize.min,
@@ -516,15 +655,17 @@ class _PantryItemCardState extends State<PantryItemCard> {
                               Icon(
                                 item.isFinished ? Icons.replay_rounded : Icons.add_rounded,
                                 size: 16,
+                                color: item.isFinished ? AppColors.textSecondary : Colors.white,
                               ),
                               const SizedBox(width: 4),
                               Text(
                                 item.isFinished
                                     ? 'Isi Ulang'
-                                    : 'Tuang ${item.defaultServingSize.toStringAsFixed(0)} ${item.unit}',
+                                    : '+ ${item.defaultServingSize.toStringAsFixed(0)} ${item.unit}',
                                 style: GoogleFonts.dmSans(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w800,
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: item.isFinished ? AppColors.textSecondary : Colors.white,
                                 ),
                               ),
                             ],

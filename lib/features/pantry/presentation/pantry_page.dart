@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_theme.dart';
-import '../../../shared/utils/navigator_extension.dart';
+import '../../../shared/widgets/animated_pressable.dart';
 import '../../scanner/presentation/scanner_page.dart';
 import '../domain/pantry_item.dart';
 import 'pantry_item_card.dart';
@@ -26,11 +27,43 @@ class _PantryPageState extends State<PantryPage> {
     super.dispose();
   }
 
+  void _openScanner() {
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => const ScannerPage(),
+        transitionDuration: const Duration(milliseconds: 360),
+        reverseTransitionDuration: const Duration(milliseconds: 280),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final curve = CurvedAnimation(
+            parent: animation,
+            curve: Curves.fastEaseInToSlowEaseOut,
+            reverseCurve: Curves.easeInCubic,
+          );
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.18),
+              end: Offset.zero,
+            ).animate(curve),
+            child: FadeTransition(
+              opacity: Tween<double>(begin: 0.0, end: 1.0).animate(curve),
+              child: ScaleTransition(
+                scale: Tween<double>(begin: 0.94, end: 1.0).animate(curve),
+                child: child,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final visualMeta = Theme.of(context).extension<AppVisualMeta>();
+    final theme = Theme.of(context);
+    final visualMeta = theme.extension<AppVisualMeta>();
+    final palette = theme.extension<DashboardTilePalette>();
     final isPink = visualMeta?.isPink ?? false;
-    final primaryColor = isPink ? const Color(0xFFE91E63) : const Color(0xFF2FB8A4);
+    final primaryColor = palette?.scan ?? (isPink ? const Color(0xFFE91E63) : AppColors.accent);
 
     final pantry = context.watch<PantryProvider>();
     final filteredItems = pantry.filteredItems;
@@ -39,192 +72,146 @@ class _PantryPageState extends State<PantryPage> {
     final shelfCount = pantry.shelfItems.length;
     final lowStockCount = pantry.lowStockItems.length;
 
+    final cardBorder = isPink
+        ? primaryColor.withValues(alpha: 0.18)
+        : Colors.black.withValues(alpha: 0.06);
+
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          context.pushRoute(const ScannerPage());
-        },
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.qr_code_scanner_rounded),
-        label: Text(
-          'Scan ke Pantry',
-          style: GoogleFonts.dmSans(fontWeight: FontWeight.w800),
+      backgroundColor: theme.scaffoldBackgroundColor,
+      floatingActionButton: AnimatedPressable(
+        onPressed: _openScanner,
+        child: Container(
+          height: 50,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          decoration: BoxDecoration(
+            color: primaryColor,
+            borderRadius: BorderRadius.circular(999),
+            boxShadow: [
+              BoxShadow(
+                color: primaryColor.withValues(alpha: 0.35),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.qr_code_scanner_rounded, color: Colors.white, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Scan ke Pantry',
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          // 1. Frosted SliverAppBar
+          // 1. Frosted SliverAppBar (Consistent with App System)
           SliverAppBar(
             pinned: true,
             backgroundColor: Colors.transparent,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded),
-              onPressed: () => Navigator.pop(context),
-            ),
-            title: Text(
-              'Kulkas & Pantry',
-              style: GoogleFonts.dmSans(fontWeight: FontWeight.w800),
-            ),
+            foregroundColor: Colors.black87,
+            elevation: 0,
+            scrolledUnderElevation: 0,
             flexibleSpace: ClipRect(
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                child: Container(
-                  color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.72),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 380),
+                  curve: Curves.easeInOutCubic,
+                  color: theme.scaffoldBackgroundColor.withValues(alpha: 0.72),
                 ),
+              ),
+            ),
+            title: const Text(
+              'Kulkas & Pantry',
+              style: TextStyle(
+                color: Colors.black87,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
 
-          // 2. Summary Bento Banner
+          // 2. Search Bar
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
               child: Container(
-                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      primaryColor,
-                      primaryColor.withValues(alpha: 0.85),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(20),
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: cardBorder),
                   boxShadow: [
                     BoxShadow(
-                      color: primaryColor.withValues(alpha: 0.28),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
+                      color: Colors.black.withValues(alpha: 0.02),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: const Icon(Icons.kitchen_rounded, color: Colors.white, size: 28),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Pantry Cepat 1-Tap',
-                            style: GoogleFonts.dmSans(
-                              color: Colors.white,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '$totalItems produk ($fridgeCount di kulkas, $shelfCount di rak)',
-                            style: GoogleFonts.dmSans(
-                              color: Colors.white.withValues(alpha: 0.9),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (lowStockCount > 0)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.amber.shade900.withValues(alpha: 0.4),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          '$lowStockCount Menipis',
-                          style: GoogleFonts.dmSans(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // 3. Search Bar
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              child: TextField(
-                controller: _searchController,
-                onChanged: pantry.setSearchQuery,
-                decoration: InputDecoration(
-                  hintText: 'Cari susu, roti, oats di pantry...',
-                  hintStyle: GoogleFonts.dmSans(fontSize: 13, color: Colors.grey.shade500),
-                  prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear_rounded, size: 18),
-                          onPressed: () {
-                            _searchController.clear();
-                            pantry.setSearchQuery('');
-                          },
-                        )
-                      : null,
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: Colors.grey.shade200),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: Colors.grey.shade200),
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: pantry.setSearchQuery,
+                  style: GoogleFonts.dmSans(fontSize: 14, color: AppColors.textPrimary),
+                  decoration: InputDecoration(
+                    hintText: 'Cari susu, roti, oats di pantry...',
+                    hintStyle: GoogleFonts.dmSans(fontSize: 13.5, color: AppColors.textSecondary),
+                    prefixIcon: Icon(Icons.search_rounded, size: 20, color: primaryColor),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear_rounded, size: 18),
+                            onPressed: () {
+                              _searchController.clear();
+                              pantry.setSearchQuery('');
+                            },
+                          )
+                        : null,
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
                 ),
               ),
             ),
           ),
 
-          // 4. Category Filter Chips
+          // 3. Category Filter Chips
           SliverToBoxAdapter(
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Row(
                 children: [
-                  _FilterChip(
+                  _PantryFilterChip(
                     label: 'Semua ($totalItems)',
                     isSelected: pantry.selectedLocationFilter == null && !pantry.filterLowStockOnly,
                     onTap: () => pantry.setLocationFilter(null),
                     primaryColor: primaryColor,
                   ),
                   const SizedBox(width: 8),
-                  _FilterChip(
-                    label: '🧊 Kulkas ($fridgeCount)',
+                  _PantryFilterChip(
+                    label: 'Kulkas ($fridgeCount)',
                     isSelected: pantry.selectedLocationFilter == PantryLocation.fridge,
                     onTap: () => pantry.setLocationFilter(PantryLocation.fridge),
                     primaryColor: primaryColor,
                   ),
                   const SizedBox(width: 8),
-                  _FilterChip(
-                    label: '🥫 Rak ($shelfCount)',
+                  _PantryFilterChip(
+                    label: 'Rak ($shelfCount)',
                     isSelected: pantry.selectedLocationFilter == PantryLocation.shelf,
                     onTap: () => pantry.setLocationFilter(PantryLocation.shelf),
                     primaryColor: primaryColor,
                   ),
                   const SizedBox(width: 8),
-                  _FilterChip(
-                    label: '⚠️ Menipis ($lowStockCount)',
+                  _PantryFilterChip(
+                    label: 'Menipis ($lowStockCount)',
                     isSelected: pantry.filterLowStockOnly,
                     onTap: () => pantry.setLowStockFilter(!pantry.filterLowStockOnly),
                     primaryColor: primaryColor,
@@ -234,7 +221,7 @@ class _PantryPageState extends State<PantryPage> {
             ),
           ),
 
-          // 5. Item List or Empty State
+          // 4. Item List or Empty State
           if (filteredItems.isEmpty)
             SliverFillRemaining(
               hasScrollBody: false,
@@ -245,45 +232,30 @@ class _PantryPageState extends State<PantryPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(20),
+                        padding: const EdgeInsets.all(22),
                         decoration: BoxDecoration(
                           color: primaryColor.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(Icons.kitchen_rounded, size: 54, color: primaryColor),
+                        child: Icon(Icons.kitchen_rounded, size: 52, color: primaryColor),
                       ),
                       const SizedBox(height: 16),
                       Text(
                         'Kulkas & Pantry Kosong',
                         style: GoogleFonts.dmSans(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.black87,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'Scan produk kemasan berulang (seperti 1L Susu, Roti Gandum, Oats) lalu simpan ke kulkas untuk pencatatan instan 1-tap!',
+                        'Scan makanan atau minuman kemasan multi-porsi (seperti 1L Susu, Roti, atau Oats) untuk pencatatan instan 1-tap kapan saja.',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.dmSans(
                           fontSize: 13,
-                          color: Colors.grey.shade600,
-                          height: 1.4,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      ElevatedButton.icon(
-                        onPressed: () => context.pushRoute(const ScannerPage()),
-                        icon: const Icon(Icons.qr_code_scanner_rounded, size: 18),
-                        label: Text(
-                          'Scan Produk Baru',
-                          style: GoogleFonts.dmSans(fontWeight: FontWeight.w800),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          color: AppColors.textSecondary,
+                          height: 1.45,
                         ),
                       ),
                     ],
@@ -313,8 +285,8 @@ class _PantryPageState extends State<PantryPage> {
   }
 }
 
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
+class _PantryFilterChip extends StatelessWidget {
+  const _PantryFilterChip({
     required this.label,
     required this.isSelected,
     required this.onTap,
@@ -328,22 +300,30 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
+    final theme = Theme.of(context);
+    final isPink = theme.extension<AppVisualMeta>()?.isPink ?? false;
+    final cardBorder = isPink
+        ? primaryColor.withValues(alpha: 0.2)
+        : Colors.black.withValues(alpha: 0.08);
+
+    return AnimatedPressable(
+      onPressed: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? primaryColor : Colors.white,
+          color: isSelected
+              ? primaryColor
+              : theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: isSelected ? primaryColor : Colors.grey.shade300,
+            color: isSelected ? primaryColor : cardBorder,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
                     color: primaryColor.withValues(alpha: 0.25),
-                    blurRadius: 6,
+                    blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
                 ]
@@ -352,9 +332,9 @@ class _FilterChip extends StatelessWidget {
         child: Text(
           label,
           style: GoogleFonts.dmSans(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: isSelected ? Colors.white : Colors.grey.shade700,
+            fontSize: 12.5,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+            color: isSelected ? Colors.white : AppColors.textSecondary,
           ),
         ),
       ),

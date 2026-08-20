@@ -149,7 +149,9 @@ class _DailyMealTrackerPageState extends State<DailyMealTrackerPage> {
                 flexibleSpace: ClipRect(
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                    child: Container(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 380),
+                      curve: Curves.easeInOutCubic,
                       color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.72),
                     ),
                   ),

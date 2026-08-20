@@ -133,9 +133,12 @@ class AppTheme {
         ),
       ),
       appBarTheme: AppBarTheme(
+        centerTitle: base.platform == TargetPlatform.iOS ||
+            base.platform == TargetPlatform.macOS,
         backgroundColor: Colors.transparent,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
+        scrolledUnderElevation: 0,
         systemOverlayStyle: const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           statusBarIconBrightness: Brightness.dark,
