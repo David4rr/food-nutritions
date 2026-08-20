@@ -14,6 +14,14 @@ enum MealTimeCategory {
     }
     return MealTimeCategory.snack;
   }
+
+  static MealTimeCategory fromCurrentTime() {
+    final hour = DateTime.now().hour;
+    if (hour >= 5 && hour < 11) return MealTimeCategory.breakfast;
+    if (hour >= 11 && hour < 15) return MealTimeCategory.lunch;
+    if (hour >= 15 && hour < 18) return MealTimeCategory.snack;
+    return MealTimeCategory.dinner;
+  }
 }
 
 class MealEntry {

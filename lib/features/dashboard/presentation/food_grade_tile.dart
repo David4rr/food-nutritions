@@ -61,7 +61,9 @@ class _FoodGradeTileState extends State<FoodGradeTile> {
           tileRadius: BorderRadius.circular(24),
         );
       },
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 380),
+        curve: Curves.easeInOutCubic,
         key: _tileKey,
         width: widget.width,
         height: widget.height,

@@ -7,7 +7,6 @@ import '../domain/nutrition_target.dart';
 import 'dashboard_sections.dart';
 import 'macro_summary_card.dart';
 import 'profile_target_form.dart';
-import '../../../app/theme/app_theme.dart';
 import '../../../shared/widgets/staggered_animated_tile.dart';
 
 class ProfilePage extends StatefulWidget {

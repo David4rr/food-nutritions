@@ -56,7 +56,9 @@ class _SmartInsightTileState extends State<SmartInsightTile>
         : const Color(0xFF2C3E50);
     final insight = _buildInsight();
 
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 380),
+      curve: Curves.easeInOutCubic,
       width: widget.width,
       height: widget.height,
       decoration: BoxDecoration(

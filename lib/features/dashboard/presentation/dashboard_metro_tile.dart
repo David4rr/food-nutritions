@@ -29,7 +29,9 @@ class DashboardMetroTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedPressable(
       onPressed: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 380),
+        curve: Curves.easeInOutCubic,
         width: width,
         height: height,
         decoration: BoxDecoration(

@@ -29,7 +29,9 @@ class WaterTrackerTileView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 380),
+      curve: Curves.easeInOutCubic,
       width: width,
       height: height,
       decoration: BoxDecoration(

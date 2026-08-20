@@ -5,12 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 
-import '../../../app/theme/app_style_controller.dart';
-import '../../../app/theme/app_theme.dart';
 import '../../history/presentation/history_provider.dart';
 import 'dashboard_content.dart';
 import 'dashboard_idle_cat_overlay.dart';
 import 'hydration_celebration_dialog.dart';
+import 'windows_morphing_button.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -143,18 +142,16 @@ class _DashboardPageState extends State<DashboardPage> {
                         flexibleSpace: ClipRect(
                           child: BackdropFilter(
                             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                            child: Container(
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 380),
+                              curve: Curves.easeInOutCubic,
                               color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.72),
                             ),
                           ),
                         ),
                         title: const Text('Dashboard Nutrisi'),
-                        actions: [
-                          IconButton(
-                            tooltip: 'Tampilan aplikasi',
-                            icon: const Icon(Icons.palette_rounded),
-                            onPressed: _openAppearanceSettings,
-                          ),
+                        actions: const [
+                          WindowsMorphingButton(),
                         ],
                       ),
                       if (!snapshot.hasData)
@@ -229,81 +226,6 @@ class _DashboardPageState extends State<DashboardPage> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Future<void> _openAppearanceSettings() async {
-    final appStyle = context.read<AppStyleController>();
-    await showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Tampilan Aplikasi',
-                  style: Theme.of(sheetContext).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 8),
-                _StyleChoiceTile(
-                  title: 'Default (sekarang)',
-                  subtitle: 'Nuansa asli aplikasi saat ini',
-                  selected: appStyle.style == AppVisualStyle.defaultStyle,
-                  onTap: () async {
-                    await appStyle.setStyle(AppVisualStyle.defaultStyle);
-                    if (sheetContext.mounted) Navigator.of(sheetContext).pop();
-                  },
-                ),
-                _StyleChoiceTile(
-                  title: 'Pink Bloom',
-                  subtitle: 'Mayoritas pink dengan variasi tone di tile',
-                  selected: appStyle.style == AppVisualStyle.pinkBloom,
-                  onTap: () async {
-                    await appStyle.setStyle(AppVisualStyle.pinkBloom);
-                    if (sheetContext.mounted) Navigator.of(sheetContext).pop();
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _StyleChoiceTile extends StatelessWidget {
-  const _StyleChoiceTile({
-    required this.title,
-    required this.subtitle,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String title;
-  final String subtitle;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(top: 8),
-      child: ListTile(
-        onTap: onTap,
-        leading: Icon(
-          selected
-              ? Icons.radio_button_checked_rounded
-              : Icons.radio_button_off_rounded,
-        ),
-        title: Text(title),
-        subtitle: Text(subtitle),
       ),
     );
   }

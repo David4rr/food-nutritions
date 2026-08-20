@@ -12,7 +12,9 @@ class MacroSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = Theme.of(context).extension<DashboardTilePalette>();
     final cardColor = palette?.targetProtein ?? const Color(0xFF673AB7);
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 380),
+      curve: Curves.easeInOutCubic,
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(16),

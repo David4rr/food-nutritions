@@ -8,6 +8,7 @@ import '../../../app/theme/app_theme.dart';
 import '../data/open_food_facts_service.dart';
 import '../data/product_cache_repository.dart';
 import '../domain/product_view_data.dart';
+import '../../pantry/presentation/add_to_pantry_sheet.dart';
 import 'portion_selector_sheet.dart';
 import 'product_analysis_sections.dart';
 import 'product_detail_enrichment.dart';
@@ -182,6 +183,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 fontWeight: FontWeight.bold,
               ),
             ),
+            actions: [
+              IconButton(
+                tooltip: 'Simpan ke Kulkas / Pantry',
+                icon: const Icon(Icons.kitchen_rounded),
+                onPressed: () => AddToPantrySheet.show(context, _item),
+              ),
+            ],
           ),
           SliverToBoxAdapter(
             child: Padding(

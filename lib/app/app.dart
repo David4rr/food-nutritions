@@ -7,6 +7,8 @@ import '../features/history/data/history_repository.dart';
 import '../features/history/data/meal_entry_repository.dart';
 import '../features/history/data/weekly_stats_repository.dart';
 import '../features/history/presentation/history_provider.dart';
+import '../features/pantry/data/pantry_repository.dart';
+import '../features/pantry/presentation/pantry_provider.dart';
 import '../features/product/data/product_cache_repository.dart';
 import 'theme/app_style_controller.dart';
 
@@ -18,6 +20,7 @@ class FoodNutritionsApp extends StatefulWidget {
     required this.dailyNutritionAnalyticsRepository,
     required this.mealEntryRepository,
     required this.productCacheRepository,
+    required this.pantryRepository,
   });
 
   final HistoryRepository historyRepository;
@@ -25,6 +28,7 @@ class FoodNutritionsApp extends StatefulWidget {
   final DailyNutritionAnalyticsRepository dailyNutritionAnalyticsRepository;
   final MealEntryRepository mealEntryRepository;
   final ProductCacheRepository productCacheRepository;
+  final PantryRepository pantryRepository;
 
   @override
   State<FoodNutritionsApp> createState() => _FoodNutritionsAppState();
@@ -58,6 +62,11 @@ class _FoodNutritionsAppState extends State<FoodNutritionsApp> {
             widget.mealEntryRepository,
           )..loadHistory(),
         ),
+        ChangeNotifierProvider(
+          create: (_) => PantryProvider(
+            widget.pantryRepository,
+          ),
+        ),
         ChangeNotifierProvider<AppStyleController>.value(
           value: _appStyleController,
         ),
@@ -71,6 +80,14 @@ class _FoodNutritionsAppState extends State<FoodNutritionsApp> {
             debugShowCheckedModeBanner: false,
             title: 'Food Nutritions',
             theme: appStyle.themeData,
+            builder: (context, child) {
+              return AnimatedTheme(
+                data: appStyle.themeData,
+                duration: const Duration(milliseconds: 380),
+                curve: Curves.easeInOutCubic,
+                child: child!,
+              );
+            },
             home: const DashboardPage(),
           );
         },
