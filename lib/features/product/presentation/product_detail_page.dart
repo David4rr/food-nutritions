@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -172,10 +173,20 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         slivers: [
           SliverAppBar(
             pinned: true,
-            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            backgroundColor: Colors.transparent,
             foregroundColor: Colors.black87,
             elevation: 0,
             scrolledUnderElevation: 0,
+            flexibleSpace: ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 380),
+                  curve: Curves.easeInOutCubic,
+                  color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.72),
+                ),
+              ),
+            ),
             title: const Text(
               'Detail Produk',
               style: TextStyle(

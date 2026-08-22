@@ -1,6 +1,7 @@
 import '../domain/product_view_data.dart';
 
 bool shouldEnrichProductDetail(ProductViewData item) {
+  if (item.barcode.startsWith('ocr_')) return false;
   final missingMainMacros =
       item.calories == 0 && item.protein == 0 && item.fat == 0;
   final missingContext =

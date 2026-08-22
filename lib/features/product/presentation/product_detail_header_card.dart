@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -38,18 +40,27 @@ class ProductDetailHeaderCard extends StatelessWidget {
               child: Center(
                 child: Hero(
                   tag: productImageHeroTag(item),
-                  // [NEW] CachedNetworkImage: gambar di-cache lokal
-                  child: CachedNetworkImage(
-                    imageUrl: imageUrl,
-                    fit: BoxFit.contain,
-                    placeholder: (_, _) =>
-                        const Center(child: CircularProgressIndicator()),
-                    errorWidget: (_, _, _) => const Icon(
-                      Icons.broken_image_rounded,
-                      size: 64,
-                      color: Colors.white54,
-                    ),
-                  ),
+                  child: imageUrl.startsWith('file://')
+                      ? Image.file(
+                          File(imageUrl.replaceFirst('file://', '')),
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, _, _) => const Icon(
+                            Icons.broken_image_rounded,
+                            size: 64,
+                            color: Colors.white54,
+                          ),
+                        )
+                      : CachedNetworkImage(
+                          imageUrl: imageUrl,
+                          fit: BoxFit.contain,
+                          placeholder: (_, _) =>
+                              const Center(child: CircularProgressIndicator()),
+                          errorWidget: (_, _, _) => const Icon(
+                            Icons.broken_image_rounded,
+                            size: 64,
+                            color: Colors.white54,
+                          ),
+                        ),
                 ),
               ),
             ),
@@ -86,31 +97,48 @@ class ProductDetailHeaderCard extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: item.imageUrl.isNotEmpty
-                    // [NEW] CachedNetworkImage: cache gambar produk lokal
-                    ? CachedNetworkImage(
-                        imageUrl: item.imageUrl,
-                        width: double.infinity,
-                        height: 170,
-                        fit: BoxFit.cover,
-                        placeholder: (_, _) => Container(
-                          height: 170,
-                          color: AppColors.background,
-                          child: const Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                        ),
-                        errorWidget: (_, _, _) => Container(
-                          height: 170,
-                          width: double.infinity,
-                          color: AppColors.background,
-                          alignment: Alignment.center,
-                          child: const Icon(
-                            Icons.broken_image_rounded,
-                            size: 48,
-                            color: Colors.black38,
-                          ),
-                        ),
-                      )
+                    ? (item.imageUrl.startsWith('file://')
+                        ? Image.file(
+                            File(item.imageUrl.replaceFirst('file://', '')),
+                            width: double.infinity,
+                            height: 170,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => Container(
+                              height: 170,
+                              width: double.infinity,
+                              color: AppColors.background,
+                              alignment: Alignment.center,
+                              child: const Icon(
+                                Icons.document_scanner_rounded,
+                                size: 48,
+                                color: Colors.black38,
+                              ),
+                            ),
+                          )
+                        : CachedNetworkImage(
+                            imageUrl: item.imageUrl,
+                            width: double.infinity,
+                            height: 170,
+                            fit: BoxFit.cover,
+                            placeholder: (_, _) => Container(
+                              height: 170,
+                              color: AppColors.background,
+                              child: const Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                            ),
+                            errorWidget: (_, _, _) => Container(
+                              height: 170,
+                              width: double.infinity,
+                              color: AppColors.background,
+                              alignment: Alignment.center,
+                              child: const Icon(
+                                Icons.broken_image_rounded,
+                                size: 48,
+                                color: Colors.black38,
+                              ),
+                            ),
+                          ))
                     : Container(
                         height: 170,
                         width: double.infinity,

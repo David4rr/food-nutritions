@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -239,32 +241,47 @@ class _HistoryTileState extends State<_HistoryTile> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(14),
                         child: widget.item.imageUrl.isNotEmpty
-                            // ponytail: Use CachedNetworkImage to avoid re-downloading thumbnail on every rebuild
-                            ? CachedNetworkImage(
-                                imageUrl: widget.item.imageUrl,
-                                width: 62,
-                                height: 62,
-                                fit: BoxFit.cover,
-                                placeholder: (context, url) => Container(
-                                  width: 62,
-                                  height: 62,
-                                  color: Colors.white.withValues(alpha: 0.1),
-                                  child: const Center(
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
+                            ? (widget.item.imageUrl.startsWith('file://')
+                                ? Image.file(
+                                    File(widget.item.imageUrl.replaceFirst('file://', '')),
+                                    width: 62,
+                                    height: 62,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, _, _) => Container(
+                                      width: 62,
+                                      height: 62,
+                                      color: Colors.white.withValues(alpha: 0.1),
+                                      child: const Icon(
+                                        Icons.document_scanner_rounded,
+                                        color: Colors.white70,
+                                      ),
                                     ),
-                                  ),
-                                ),
-                                errorWidget: (context, url, error) => Container(
-                                  width: 62,
-                                  height: 62,
-                                  color: Colors.white.withValues(alpha: 0.1),
-                                  child: const Icon(
-                                    Icons.broken_image,
-                                    color: Colors.white54,
-                                  ),
-                                ),
-                              )
+                                  )
+                                : CachedNetworkImage(
+                                    imageUrl: widget.item.imageUrl,
+                                    width: 62,
+                                    height: 62,
+                                    fit: BoxFit.cover,
+                                    placeholder: (context, url) => Container(
+                                      width: 62,
+                                      height: 62,
+                                      color: Colors.white.withValues(alpha: 0.1),
+                                      child: const Center(
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                    errorWidget: (context, url, error) => Container(
+                                      width: 62,
+                                      height: 62,
+                                      color: Colors.white.withValues(alpha: 0.1),
+                                      child: const Icon(
+                                        Icons.broken_image,
+                                        color: Colors.white54,
+                                      ),
+                                    ),
+                                  ))
                             : Container(
                                 width: 62,
                                 height: 62,
